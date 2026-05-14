@@ -1,0 +1,85 @@
+# =========================
+# Backend (Spring Boot)
+# =========================
+
+backend/allride-backend/target/
+backend/allride-backend/.mvn/wrapper/maven-wrapper.jar
+
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# =========================
+# Frontend (React/Vite)
+# =========================
+
+frontend/allride-frontend/node_modules/
+frontend/allride-frontend/dist/
+frontend/allride-frontend/.vite/
+
+# =========================
+# IntelliJ IDEA
+# =========================
+
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# =========================
+# VS Code
+# =========================
+
+.vscode/
+
+# =========================
+# Eclipse / STS
+# =========================
+
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# =========================
+# NetBeans
+# =========================
+
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# =========================
+# OS Files
+# =========================
+
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+
+*.log
+
+# =========================
+# Environment Variables
+# =========================
+
+.env
+.env.local
+.env.production
+
+# =========================
+# Misc
+# =========================
+
+coverage/

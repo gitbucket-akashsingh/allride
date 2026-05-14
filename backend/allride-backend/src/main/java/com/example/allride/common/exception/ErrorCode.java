@@ -1,0 +1,14 @@
+package com.example.allride.common.exception;
+
+public enum ErrorCode {
+    USER_NOT_FOUND,
+    DRIVER_UNAVAILABLE,
+    INVALID_TOKEN,
+    PAYMENT_FAILED,
+    AUTH_INVALID_CREDENTIALS,
+    AUTH_INVALID_TOKEN,
+    AUTH_UNAUTHORIZED,
+    EMAIL_ALREADY_EXISTS,
+    RIDE_ALREADY_CANCELLED,
+    INTERNAL_SERVER_ERROR
+}
