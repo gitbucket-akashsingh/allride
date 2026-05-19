@@ -30,3 +30,34 @@ Install these FIRST.
 
 - Create File :
   src/routes/AppRoutes.jsx
+
+## LOGIN FLOW:
+
+First Understand The BIG Problem
+
+Your original LoginPage.jsx was doing EVERYTHING:
+
+Render UI
+Handle inputs
+Call backend
+Store token
+Handle login logic
+Redirect users
+Show notifications
+
+This works initially.
+
+But imagine later:
+
+Signup page also needs login logic
+Google OAuth also needs auth logic
+Mobile app also needs auth logic
+Auto-login on refresh
+Refresh tokens
+Logout everywhere
+Admin panel
+Protected routes
+
+Then one giant file becomes impossible to manage.
+
+So modern apps split responsibilities.

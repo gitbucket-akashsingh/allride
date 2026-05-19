@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 import logo from "../../assets/allride-logo.png";
 
-function ForgotPasswordPage() {
+function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center px-4 py-10">
       {/* GLOW EFFECTS */}
@@ -14,11 +14,11 @@ function ForgotPasswordPage() {
 
       {/* BACK BUTTON */}
       <Link
-        to="/"
-        className="absolute top-6 left-6 z-20 flex items-center gap-2 px-5 py-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 hover:-translate-y-0.5 transition-all duration-300 text-sm font-semibold"
+        to="/login"
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 px-5 py-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition-all duration-300 text-sm font-semibold"
       >
         <ArrowLeft size={18} />
-        Back to Home
+        Back to Login
       </Link>
 
       {/* CARD */}
@@ -40,52 +40,51 @@ function ForgotPasswordPage() {
             </div>
 
             <h1 className="text-4xl font-black tracking-tight">
-              Forgot Password?
+              Reset Password
             </h1>
 
-            <p className="text-gray-400 mt-3 text-sm leading-relaxed">
-              Enter your email address and we&apos;ll send you a password reset
-              link.
+            <p className="text-gray-400 mt-3 text-sm">
+              Create a new secure password for your account.
             </p>
           </div>
 
           {/* FORM */}
-          <form className="space-y-6">
+          <form className="space-y-5">
             <div>
               <label className="text-sm text-gray-400 mb-2 block">
-                Email Address
+                New Password
               </label>
 
               <input
-                type="email"
-                placeholder="Enter your email"
+                type="password"
+                placeholder="Enter new password"
                 className="w-full px-5 py-4 rounded-2xl bg-zinc-900 border border-white/10 focus:outline-none focus:border-yellow-500 transition-all"
               />
             </div>
 
-            {/* BUTTON */}
+            <div>
+              <label className="text-sm text-gray-400 mb-2 block">
+                Confirm Password
+              </label>
+
+              <input
+                type="password"
+                placeholder="Confirm new password"
+                className="w-full px-5 py-4 rounded-2xl bg-zinc-900 border border-white/10 focus:outline-none focus:border-yellow-500 transition-all"
+              />
+            </div>
+
             <button
               type="submit"
               className="w-full py-4 rounded-2xl bg-yellow-500 text-black font-black hover:scale-[1.02] transition-all duration-300 shadow-2xl"
             >
-              Send Reset Link
+              Update Password
             </button>
           </form>
-
-          {/* FOOTER */}
-          <div className="mt-8 text-center text-gray-400 text-sm">
-            Remember your password?{" "}
-            <Link
-              to="/login"
-              className="text-yellow-400 font-semibold hover:text-yellow-300"
-            >
-              Back to Login
-            </Link>
-          </div>
         </div>
       </motion.div>
     </div>
   );
 }
 
-export default ForgotPasswordPage;
+export default ResetPasswordPage;

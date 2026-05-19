@@ -1,10 +1,72 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 import logo from "../../assets/allride-logo.png";
 
-function SignupPage() {
+function LoginPage() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post("http://localhost:8080/auth/login", {
+        email,
+        password,
+      });
+
+      /*
+      BACKEND RESPONSE
+    */
+
+      const token = response.data.token;
+
+      const user = response.data.user;
+
+      /*
+      STORE TOKEN
+    */
+
+      localStorage.setItem("token", token);
+
+      /*
+      STORE USER INFO
+    */
+
+      localStorage.setItem("user", JSON.stringify(user));
+
+      /*
+      ROLE-BASED REDIRECTION
+    */
+
+      switch (user.role) {
+        case "RIDER":
+          navigate("/rider/home");
+          break;
+
+        case "DRIVER":
+          navigate("/driver/dashboard");
+          break;
+
+        case "ADMIN":
+          navigate("/admin/dashboard");
+          break;
+
+        default:
+          navigate("/");
+      }
+    } catch (error) {
+      console.error(error);
+
+      alert("Login Failed");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center px-4 py-10">
       {/* BACK BUTTON */}
@@ -15,8 +77,7 @@ function SignupPage() {
         <ArrowLeft size={18} />
         Back to Home
       </Link>
-
-      {/* GLOW EFFECTS */}
+      {/* BACKGROUND GLOWS */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl"></div>
 
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
@@ -29,7 +90,7 @@ function SignupPage() {
         className="relative z-10 w-full max-w-md"
       >
         <div className="backdrop-blur-2xl bg-white/5 border border-white/10 shadow-2xl rounded-[36px] p-8 sm:p-10">
-          {/* HEADER */}
+          {/* LOGO */}
           <div className="flex flex-col items-center text-center mb-10">
             <div className="w-20 h-20 rounded-3xl bg-black flex items-center justify-center shadow-2xl mb-5">
               <img
@@ -39,30 +100,15 @@ function SignupPage() {
               />
             </div>
 
-            <h1 className="text-4xl font-black tracking-tight">
-              Create Account
-            </h1>
+            <h1 className="text-4xl font-black tracking-tight">Welcome Back</h1>
 
             <p className="text-gray-400 mt-3 text-sm">
-              Join the future of transportation
+              Login to continue your AllRide journey
             </p>
           </div>
 
           {/* FORM */}
-          <form className="space-y-5">
-            {/* NAME */}
-            <div>
-              <label className="text-sm text-gray-400 mb-2 block">
-                Full Name
-              </label>
-
-              <input
-                type="text"
-                placeholder="Enter your full name"
-                className="w-full px-5 py-4 rounded-2xl bg-zinc-900 border border-white/10 focus:outline-none focus:border-yellow-500 transition-all"
-              />
-            </div>
-
+          <form onSubmit={handleLogin} className="space-y-5">
             {/* EMAIL */}
             <div>
               <label className="text-sm text-gray-400 mb-2 block">
@@ -84,9 +130,24 @@ function SignupPage() {
 
               <input
                 type="password"
-                placeholder="Create password"
+                placeholder="Enter your password"
                 className="w-full px-5 py-4 rounded-2xl bg-zinc-900 border border-white/10 focus:outline-none focus:border-yellow-500 transition-all"
               />
+            </div>
+
+            {/* REMEMBER */}
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2 text-gray-400">
+                <input type="checkbox" />
+                Remember me
+              </label>
+
+              <Link
+                to="/forgot-password"
+                className="text-yellow-400 hover:text-yellow-300"
+              >
+                Forgot Password?
+              </Link>
             </div>
 
             {/* BUTTON */}
@@ -94,11 +155,11 @@ function SignupPage() {
               type="submit"
               className="w-full py-4 rounded-2xl bg-yellow-500 text-black font-black hover:scale-[1.02] transition-all duration-300 shadow-2xl"
             >
-              Create Account
+              Login
             </button>
           </form>
 
-          {/* Oauth2 */}
+          {/* OAuth2 */}
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-white/10"></div>
@@ -110,6 +171,8 @@ function SignupPage() {
               </span>
             </div>
           </div>
+
+          {/* OAUTH BUTTONS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* GOOGLE */}
             <button
@@ -140,12 +203,12 @@ function SignupPage() {
 
           {/* FOOTER */}
           <div className="mt-8 text-center text-gray-400 text-sm">
-            Already have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
-              to="/login"
+              to="/signup"
               className="text-yellow-400 font-semibold hover:text-yellow-300"
             >
-              Login
+              Create Account
             </Link>
           </div>
         </div>
@@ -154,4 +217,4 @@ function SignupPage() {
   );
 }
 
-export default SignupPage;
+export default LoginPage;

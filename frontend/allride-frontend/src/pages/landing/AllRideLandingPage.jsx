@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 import logo from "../assets/allride-logo.png";
 import hero1 from "../assets/images/hero1.png";
 import hero2 from "../assets/images/hero2.png";
@@ -12,6 +14,8 @@ import HeroSlider from "../components/sections/hero/HeroSlider.jsx";
 
 export default function AllRideLandingPage() {
   const heroImages = [hero1, hero2, hero3];
+
+  const navigate = useNavigate();
 
   const [theme, setTheme] = useState("dark");
 
@@ -114,7 +118,10 @@ export default function AllRideLandingPage() {
                 {theme === "dark" ? "🌙" : "☀️"}
               </button>
 
-              <button className="hidden sm:flex px-5 py-2.5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300 font-semibold text-white">
+              <button
+                onClick={() => navigate("/login")}
+                className="hidden sm:flex px-5 py-2.5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300 font-semibold text-white"
+              >
                 Login
               </button>
 
