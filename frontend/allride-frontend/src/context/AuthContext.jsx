@@ -1,4 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { getCurrentUser } from "../api/authApi";
+
+import { getAccessToken, clearAuthData } from "../utils/authStorage";
 
 const AuthContext = createContext();
 
@@ -7,24 +10,57 @@ export function AuthProvider({ children }) {
 
   const [loading, setLoading] = useState(true);
 
+  /*
+    INITIAL AUTH CHECK
+  */
+
   useEffect(() => {
-    const storedUser = localStorage.getItem("allride-user");
+    const initializeAuth = async () => {
+      try {
+        const token = getAccessToken();
 
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+        if (!token) {
+          setLoading(false);
+          return;
+        }
 
-    setLoading(false);
+        const response = await getCurrentUser();
+
+        setUser(response.data);
+      } catch (error) {
+        console.error("Auto login failed", error);
+
+        clearAuthData();
+
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
+  /*
+    LOGIN
+  */
+
   const login = (userData) => {
-    localStorage.setItem("allride-user", JSON.stringify(userData));
+    localStorage.setItem("user", JSON.stringify(userData));
 
     setUser(userData);
   };
 
+  /*
+    LOGOUT
+  */
+
   const logout = () => {
-    localStorage.removeItem("allride-user");
+    localStorage.removeItem("user");
+
+    localStorage.removeItem("token");
+
+    localStorage.removeItem("refreshToken");
 
     setUser(null);
   };

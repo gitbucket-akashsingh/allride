@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import LandingPage from "../pages/landing/LandingPage";
-import LoginPage from "../pages/auth/LoginPage";
+import NewLoginPage from "../pages/auth/NewLoginPage";
 import SignupPage from "../pages/auth/SignupPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
@@ -18,7 +18,7 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
 
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<NewLoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
 
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />

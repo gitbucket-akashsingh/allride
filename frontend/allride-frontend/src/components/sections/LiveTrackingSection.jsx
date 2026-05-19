@@ -1,10 +1,11 @@
 import map_image from "/src/assets/images/map_image.png";
+import { motion } from "framer-motion";
 // import Driver_image from "/src/assets/images/Driver_image.png";
 
 function LiveTrackingSection() {
   return (
     <div className=" bg-black text-white overflow-hidden">
-      <section
+      <motion.section
         id="live-map"
         initial={{ opacity: 0, y: 100 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -84,7 +85,7 @@ function LiveTrackingSection() {
                   <div className="absolute bottom-1/4 left-1/3 w-6 h-6 rounded-full bg-yellow-400 border-4 border-white shadow-2xl animate-pulse"></div> */}
           </div>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 }
