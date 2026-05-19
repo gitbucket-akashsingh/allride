@@ -6,12 +6,36 @@ import lombok.Data;
 @Data
 @Builder
 public class LoginResponse {
-    private String fullName;
-    private String message;
-    private String token;
+    private boolean success;
 
-    private String accessToken;
-    private String refreshToken;
-    private long expiresIn;
+    private String message;
+
+    private UserData user;
+
+    private TokenData tokens;
+
+    @Data
+    @Builder
+    public static class UserData {
+
+        private Long id;
+
+        private String fullName;
+
+        private String email;
+
+        private String role;
+    }
+
+    @Data
+    @Builder
+    public static class TokenData {
+
+        private String accessToken;
+
+        private String refreshToken;
+
+        private long expiresIn;
+    }
 
 }
