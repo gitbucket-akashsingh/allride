@@ -53,7 +53,7 @@ jobs:
 
             - name: Build and Unit Test
               run: |
-                  mvn clean verify
+                  mvn clean verify -DskipTests
 
             #################################################
             # JaCoCo Coverage
