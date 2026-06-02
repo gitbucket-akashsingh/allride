@@ -15,6 +15,11 @@ import VerifyOTPPage from "@/features/auth/pages/VerifyOTPPage";
 import EmailVerificationPage from "@/features/auth/pages/EmailVerificationPage";
 
 import RiderHomePage from "@/features/rider/pages/RiderHomePage";
+import BookRidePage from "@/features/rider/pages/BookRidePage";
+import RideHistoryPage from "@/features/rider/pages/RideHistoryPage";
+import ProfilePage from "@/features/rider/pages/ProfilePage";
+import PaymentPage from "@/features/rider/pages/PaymentPage";
+import RideTrackingPage from "@/features/rider/pages/RideTrackingPage";
 
 import DriverDashboard from "@/features/driver/pages/DriverDashboard";
 import DriverHomePage from "@/features/driver/pages/DriverHomePage";
@@ -27,7 +32,10 @@ import PublicRoutes from "@/shared/routes/PublicRoutes";
 import RoleBasedRoutes from "@/shared/routes/RoleBasedRoutes";
 
 import UnauthorizedPage from "@/shared/pages/UnAuthorizedPage";
-
+// ----------------------------------------------------------
+import MapTestPage from "@/features/map/pages/MapTestPage";
+import RiderBookingPage from "@/features/booking/pages/RiderBookingPage";
+// ----------------------------------------------------------
 function AppRoutes() {
   return (
     <BrowserRouter>
@@ -54,6 +62,11 @@ function AppRoutes() {
           <Route element={<RoleBasedRoutes allowedRoles={["RIDER"]} />}>
             <Route element={<RiderLayout />}>
               <Route path="/rider/home" element={<RiderHomePage />} />
+              <Route path="/rider/book" element={<BookRidePage />} />
+              <Route path="/rider/history" element={<RideHistoryPage />} />
+              <Route path="/rider/profile" element={<ProfilePage />} />
+              <Route path="/rider/payments" element={<PaymentPage />} />
+              <Route path="/rider/tracking" element={<RideTrackingPage />} />
             </Route>
           </Route>
         </Route>
@@ -79,6 +92,9 @@ function AppRoutes() {
         </Route>
 
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+        <Route path="/map-test" element={<MapTestPage />} />
+        <Route path="/book-ride" element={<RiderBookingPage />} />
 
         {/* <Route path="/" element={<LandingPage />} /> */}
 
