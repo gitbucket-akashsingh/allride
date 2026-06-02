@@ -1,1 +1,54 @@
 @import "tailwindcss";
+
+/* ── Enable CLASS-based dark mode for Tailwind v4 ── */
+@variant dark (&:where(.dark, .dark *));
+
+/* ── CSS Theme Variables ── */
+:root,
+.dark {
+  --bg-page: #0a0a0a;
+  --bg-panel: #111827;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #4b5563;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --navbar-bg: rgba(0, 0, 0, 0.35);
+  --navbar-border: rgba(255, 255, 255, 0.6);
+  --sidebar-from: #0a0a0a;
+  --sidebar-to: #111827;
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: rgba(255, 255, 255, 0.1);
+  --card-hover: rgba(255, 255, 255, 0.05);
+}
+
+.light {
+  --bg-page: #f8fafc;
+  --bg-panel: #ffffff;
+  --bg-card: rgba(0, 0, 0, 0.03);
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --navbar-bg: rgba(255, 255, 255, 0.35);
+  --navbar-border: rgba(255, 255, 255, 0.6);
+  --navbar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-from: #ffffff;
+  --sidebar-to: #f1f5f9;
+  --input-bg: rgba(0, 0, 0, 0.03);
+  --input-border: rgba(0, 0, 0, 0.12);
+  --card-hover: rgba(0, 0, 0, 0.04);
+}
+
+/* ── Apply theme to root ── */
+html {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+}

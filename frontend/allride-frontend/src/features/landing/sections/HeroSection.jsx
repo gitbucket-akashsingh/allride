@@ -10,9 +10,9 @@ function HeroSection() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-[35%_65%] gap-10 lg:gap-12 items-center">
             {/* LEFT SIDE */}
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-semibold mb-6">
+              {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-semibold mb-6">
                 Ride Smarter With AllRide
-              </div>
+              </div> */}
 
               <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black leading-tight tracking-tight mb-6 text-center lg:text-left">
                 Go Anywhere
@@ -89,7 +89,7 @@ function HeroSection() {
               </div> */}
 
                 {/* FLOATING CARD */}
-                <div className="absolute z-1 bottom-4 right-4 lg:bottom-6 lg:right-6 bg-zinc-950/90 backdrop-blur-xl shadow-2xl rounded-3xl p-4 lg:p-5 border border-white/10 w-56 sm:w-72">
+                {/* <div className="absolute z-1 bottom-4 right-4 lg:bottom-6 lg:right-6 bg-zinc-950/90 backdrop-blur-xl shadow-2xl rounded-3xl p-4 lg:p-5 border border-white/10 w-56 sm:w-72">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h4 className="font-bold text-lg">Ride in Progress</h4>
@@ -105,7 +105,7 @@ function HeroSection() {
                     <span className="text-gray-400">ETA</span>
                     <span className="font-semibold">6 mins</span>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
