@@ -89,7 +89,7 @@ jobs:
     deploy-dev:
         needs: backend-ci
 
-        if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+        # if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
 
         runs-on: ubuntu-latest
 
