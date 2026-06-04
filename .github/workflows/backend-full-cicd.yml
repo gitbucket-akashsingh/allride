@@ -85,3 +85,27 @@ jobs:
               if: github.event_name == 'push'
               run: |
                   docker push ${{ secrets.DOCKERHUB_USERNAME }}/allride-backend:latest
+
+    deploy-dev:
+        needs: backend-ci
+
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Deploy To EC2
+              uses: appleboy/ssh-action@v1.2.0
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ${{ secrets.EC2_USER }}
+                  key: ${{ secrets.EC2_SSH_KEY }}
+
+                  script: |
+                      cd /home/ubuntu/allride
+
+                      docker compose pull
+
+                      docker compose up -d
+
+                      docker image prune -f
