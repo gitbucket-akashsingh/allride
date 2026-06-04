@@ -95,15 +95,37 @@ public class AuthenticationService {
                         .build()
         );
 
-
         return LoginResponse.builder()
-                .fullName(user.getFullName())
-                .message("Login successful! Welcome "+user.getFullName())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .expiresIn(900000)
-//                .token(jwtService.generateToken(user.getEmail()))  Not needed as access and refresh token used
+                .success(true)
+                .message("Login successful")
+
+                .user(
+                        LoginResponse.UserData.builder()
+                                .id(user.getId())
+                                .fullName(user.getFullName())
+                                .email(user.getEmail())
+                                .role(user.getRole().name())
+                                .build()
+                )
+
+                .tokens(
+                        LoginResponse.TokenData.builder()
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken)
+                                .expiresIn(900000)
+                                .build()
+                )
+
                 .build();
+
+//        return LoginResponse.builder()
+//                .fullName(user.getFullName())
+//                .message("Login successful! Welcome "+user.getFullName())
+//                .accessToken(accessToken)
+//                .refreshToken(refreshToken)
+//                .expiresIn(900000)
+////                .token(jwtService.generateToken(user.getEmail()))  Not needed as access and refresh token used
+//                .build();
     }
 
 //    CURRENT USER Service

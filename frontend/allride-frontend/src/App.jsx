@@ -1,5 +1,14 @@
-function app() {
-  return <h1>Hello World</h1>;
+import AppRoutes from "@/app/routes/AppRoutes";
+import { Toaster } from "react-hot-toast";
+
+function App() {
+  return (
+    <>
+      <Toaster position="top-right" />
+
+      <AppRoutes />
+    </>
+  );
 }
 
-export default app;
+export default App;
