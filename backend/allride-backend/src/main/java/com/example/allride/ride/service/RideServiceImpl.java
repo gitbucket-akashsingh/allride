@@ -42,7 +42,7 @@ public class RideServiceImpl implements RideService {
 
 
         Ride ride = rideMapper.toEntity(rideRequestDto, passengerId);
-
+        ride.setFare(fare);
         Ride saveRide = rideRepository.save(ride);
         return rideMapper.toResponse(saveRide);
 

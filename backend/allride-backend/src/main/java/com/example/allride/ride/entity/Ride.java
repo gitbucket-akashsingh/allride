@@ -21,13 +21,11 @@ public class Ride {
 
     private Double pickupLatitude;
     private Double pickupLongitude;
+    private String pickupAddress;
 
     private Double dropLatitude;
     private Double dropLongitude;
-
-//    private String pickupLocation;
-
-//    private String dropLocation;
+    private String dropAddress;
 
     private Double fare;
 

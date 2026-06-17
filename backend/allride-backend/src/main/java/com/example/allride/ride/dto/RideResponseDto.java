@@ -8,9 +8,15 @@ import lombok.Data;
 public class RideResponseDto {
 
     private Long rideId;
-//    private String pickupLocation;
-//    private String dropLocation;
-//    private Double fare;
     private String status;
     private String message;
+    private Double fare;
+    private Double pickupLatitude;
+    private Double pickupLongitude;
+    private String pickupAddress;
+    private Double dropLatitude;
+    private Double dropLongitude;
+    private String dropAddress;
+    private String requestedAt;
+    private String completedAt;
 }

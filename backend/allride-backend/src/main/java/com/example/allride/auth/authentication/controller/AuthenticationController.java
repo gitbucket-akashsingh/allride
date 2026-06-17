@@ -34,6 +34,9 @@ public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
 
+
+    // SIGNUP
+
     @Operation(
             summary = "Register new user",
             description = "Creates a new user account"
@@ -54,6 +57,8 @@ public class AuthenticationController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
+
+    // SIGN IN
 
     @Operation(
             summary = "Login user",

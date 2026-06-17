@@ -9,6 +9,7 @@ import com.example.allride.auth.authentication.dto.request.SignupRequest;
 import com.example.allride.auth.authentication.dto.response.RefreshResponse;
 import com.example.allride.auth.authentication.dto.response.SignupResponse;
 import com.example.allride.auth.authentication.entity.User;
+import com.example.allride.auth.common.enums.Role;
 import com.example.allride.auth.session.entity.UserSession;
 import com.example.allride.auth.session.repository.RefreshTokenRepository;
 import com.example.allride.auth.authentication.repository.UserRepository;
@@ -38,6 +39,14 @@ public class AuthenticationService {
 
 //    SIGNUP Service
     public SignupResponse signup(SignupRequest request) {
+
+        if (request.getRole() == Role.ADMIN) {
+            throw new RuntimeException("Admin accounts cannot be created via signup");
+        }
+        if (request.getRole() == null
+                || (request.getRole() != Role.RIDER && request.getRole() != Role.DRIVER)) {
+            throw new RuntimeException("Invalid role for signup"); // or a proper BaseException
+        }
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             // return "Email already exists!";

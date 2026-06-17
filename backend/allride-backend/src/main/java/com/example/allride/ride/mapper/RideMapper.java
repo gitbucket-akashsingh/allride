@@ -17,8 +17,10 @@ public class RideMapper {
                 .passengerId(riderId)
                 .pickupLatitude(rideRequestDto.getPickupLatitude())
                 .pickupLongitude(rideRequestDto.getPickupLongitude())
+                .pickupAddress(rideRequestDto.getPickupAddress())
                 .dropLatitude(rideRequestDto.getDropLatitude())
                 .dropLongitude(rideRequestDto.getDropLongitude())
+                .dropAddress(rideRequestDto.getDropAddress())
                 .status(RideStatus.REQUESTED)
                 .requestedAt(LocalDateTime.now())
                 .build();
@@ -28,6 +30,7 @@ public class RideMapper {
         return RideResponseDto.builder()
                 .rideId(ride.getId())
                 .status(ride.getStatus().name())
+                .fare(ride.getFare())
                 .message("Ride requested successfully")
                 .build();
     }
@@ -36,10 +39,16 @@ public class RideMapper {
     public RideResponseDto mapToDto(Ride ride) {
         return RideResponseDto.builder()
                 .rideId(ride.getId())
-//                .pickupLocation(ride.getPickupLocation())
-//                .dropLocation(ride.getDropLocation())
-//                .fare(ride.getFare())
                 .status(ride.getStatus().name())
+                .fare(ride.getFare())
+                .pickupLatitude(ride.getPickupLatitude())
+                .pickupLongitude(ride.getPickupLongitude())
+                .pickupAddress(ride.getPickupAddress())
+                .dropLatitude(ride.getDropLatitude())
+                .dropLongitude(ride.getDropLongitude())
+                .dropAddress(ride.getDropAddress())
+                .requestedAt(ride.getRequestedAt() != null ? ride.getRequestedAt().toString() : null)
+                .completedAt(ride.getCompletedAt() != null ? ride.getCompletedAt().toString() : null)
                 .build();
     }
 

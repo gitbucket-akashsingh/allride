@@ -1,6 +1,9 @@
 package com.example.allride.ride.controller;
 
 import com.example.allride.auth.authentication.entity.User;
+import com.example.allride.ride.entity.Ride;
+import com.example.allride.ride.repository.RideRepository;
+import com.example.allride.ride.mapper.RideMapper;
 import com.example.allride.ride.service.RideService;
 import com.example.allride.ride.dto.RideRequestDto;
 import com.example.allride.ride.dto.RideResponseDto;
@@ -19,9 +22,11 @@ import java.util.List;
 public class RideController {
 
     private final RideService rideService;
+    private final RideRepository rideRepository;
+    private final RideMapper rideMapper;
 
     @PostMapping("/request")
-    @PreAuthorize("hasRole('PASSENGER')")
+    @PreAuthorize("hasRole('RIDER')")
     public ResponseEntity<RideResponseDto> requestRide(@Valid
                                                            @RequestBody RideRequestDto rideRequestDto,
                                                        Authentication authentication) {
@@ -32,6 +37,16 @@ public class RideController {
 
          return ResponseEntity.ok(rideService.requestRide(rideRequestDto, user.getId()));
 
+    }
+
+    @GetMapping("/{rideId}/status")
+    public ResponseEntity<RideResponseDto> getRideStatus(
+            @PathVariable Long rideId,
+            Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+        return ResponseEntity.ok(rideMapper.mapToDto(ride));
     }
 
 
