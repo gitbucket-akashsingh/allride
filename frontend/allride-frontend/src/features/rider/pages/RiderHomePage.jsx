@@ -1,602 +1,315 @@
-import { useState } from "react";
-import useMapStore from "@/features/map/store/mapStore";
-import RideMap from "@/features/map/components/RideMap";
+import { useNavigate } from "react-router-dom";
+import {
+  Navigation,
+  Clock,
+  Star,
+  Sparkles,
+  CloudSun,
+  TrendingUp,
+  Zap,
+  ChevronRight,
+  MapPin,
+  Home,
+  Briefcase,
+  Plane,
+  BarChart2,
+  IndianRupee,
+} from "lucide-react";
 
-// ── Mapbox geocoding helper ─────────────────────────────────────────────────
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+// ── Mock data — replace with real API calls when backend is ready ────────────
+const MOCK_RECENT_RIDES = [
+  {
+    id: 1,
+    from: "Rajiv Gandhi International Airport",
+    to: "DBS Technology Services, Gachibowli",
+    date: "Today, 9:15 AM",
+    fare: 684,
+    status: "COMPLETED",
+    rated: false,
+    type: "Standard",
+  },
+  {
+    id: 2,
+    from: "Gachibowli, Hyderabad",
+    to: "Inorbit Mall, Madhapur",
+    date: "Yesterday, 7:30 PM",
+    fare: 132,
+    status: "COMPLETED",
+    rated: true,
+    rating: 5,
+    type: "Standard",
+  },
+  {
+    id: 3,
+    from: "Kondapur Bus Stop",
+    to: "Hitech City Metro Station",
+    date: "Jun 12, 8:00 AM",
+    fare: 98,
+    status: "COMPLETED",
+    rated: true,
+    rating: 4,
+    type: "Standard",
+  },
+];
 
-async function geocodeAddress(query) {
-  if (!MAPBOX_TOKEN || !query.trim()) return null;
-  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-    query,
-  )}.json?access_token=${MAPBOX_TOKEN}&limit=1`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (data.features?.length) {
-    const [longitude, latitude] = data.features[0].center;
-    return { latitude, longitude, label: data.features[0].place_name };
-  }
-  return null;
-}
+const MOCK_STATS = {
+  totalRides: 12,
+  totalSpent: 2450,
+  avgRating: 4.8,
+};
 
-// ── Suggestion fetcher ──────────────────────────────────────────────────────
-async function fetchSuggestions(query) {
-  if (!MAPBOX_TOKEN || query.length < 2) return [];
-  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-    query,
-  )}.json?access_token=${MAPBOX_TOKEN}&limit=5&types=place,address,poi`;
-  const res = await fetch(url);
-  const data = await res.json();
-  return data.features || [];
-}
+const QUICK_DESTINATIONS = [
+  { label: "Home", icon: Home, address: "Kondapur, Hyderabad" },
+  { label: "Work", icon: Briefcase, address: "DBS Tech, Gachibowli" },
+  { label: "Airport", icon: Plane, address: "RGIA, Shamshabad" },
+];
 
-// ── Main Component ──────────────────────────────────────────────────────────
+// ── AI insight cards — replace content via Spring AI API later ──────────────
+const AI_INSIGHTS = [
+  {
+    id: 1,
+    icon: CloudSun,
+    color: "text-amber-500",
+    bg: "bg-amber-50",
+    border: "border-amber-100",
+    title: "Weather",
+    value: "Partly cloudy, 31°C",
+    sub: "Good conditions for travel",
+  },
+  {
+    id: 2,
+    icon: TrendingUp,
+    color: "text-red-500",
+    bg: "bg-red-50",
+    border: "border-red-100",
+    title: "Traffic",
+    value: "Moderate congestion",
+    sub: "NH65 — expect +12 min",
+  },
+  {
+    id: 3,
+    icon: Zap,
+    color: "text-green-500",
+    bg: "bg-green-50",
+    border: "border-green-100",
+    title: "Best time",
+    value: "Book after 11 AM",
+    sub: "Surge ends in ~40 min",
+  },
+];
+
+const PAGE_HEIGHT = "calc(100vh - 64px)";
+
 function RiderHomePage() {
-  const [pickupInput, setPickupInput] = useState("");
-  const [dropInput, setDropInput] = useState("");
-  const [pickupSuggestions, setPickupSuggestions] = useState([]);
-  const [dropSuggestions, setDropSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [bookingStatus, setBookingStatus] = useState(null); // null | "searching" | "booked"
-
-  const setPickup = useMapStore((s) => s.setPickup);
-  const setDestination = useMapStore((s) => s.setDestination);
-  const eta = useMapStore((s) => s.eta);
-  const distance = useMapStore((s) => s.distance);
-  const pickup = useMapStore((s) => s.pickup);
-  const destination = useMapStore((s) => s.destination);
-
-  // Pickup input change
-  const handlePickupChange = async (e) => {
-    const val = e.target.value;
-    setPickupInput(val);
-    const suggestions = await fetchSuggestions(val);
-    setPickupSuggestions(suggestions);
-  };
-
-  // Drop input change
-  const handleDropChange = async (e) => {
-    const val = e.target.value;
-    setDropInput(val);
-    const suggestions = await fetchSuggestions(val);
-    setDropSuggestions(suggestions);
-  };
-
-  // Select pickup suggestion
-  const selectPickup = (feature) => {
-    const [longitude, latitude] = feature.center;
-    setPickup({ latitude, longitude });
-    setPickupInput(feature.place_name);
-    setPickupSuggestions([]);
-  };
-
-  // Select drop suggestion
-  const selectDrop = (feature) => {
-    const [longitude, latitude] = feature.center;
-    setDestination({ latitude, longitude });
-    setDropInput(feature.place_name);
-    setDropSuggestions([]);
-  };
-
-  // Book ride handler
-  const handleBookRide = async () => {
-    if (!pickupInput || !dropInput) return;
-    setLoading(true);
-    try {
-      // If coordinates not yet set via suggestion, geocode now
-      if (!pickup) {
-        const p = await geocodeAddress(pickupInput);
-        if (p) setPickup(p);
-      }
-      if (!destination) {
-        const d = await geocodeAddress(dropInput);
-        if (d) setDestination(d);
-      }
-      setBookingStatus("searching");
-      // Simulate driver search (replace with real API call)
-      setTimeout(() => setBookingStatus("booked"), 3000);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const canBook = pickupInput.trim() && dropInput.trim();
+  const navigate = useNavigate();
 
   return (
     <div
-      style={{
-        display: "flex",
-        height: "calc(100vh - 64px)",
-        width: "100%",
-        background: "#0a0a0a",
-        overflow: "hidden",
-      }}
+      className="bg-zinc-100 dark:bg-zinc-950 min-h-screen"
+      
     >
-      {/* ── LEFT PANEL ───────────────────────────────────────────── */}
-      <div
-        style={{
-          width: "380px",
-          minWidth: "340px",
-          background: "linear-gradient(180deg, #111827 0%, #0f172a 100%)",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
-          display: "flex",
-          flexDirection: "column",
-          padding: "28px 24px",
-          gap: "20px",
-          overflowY: "auto",
-          zIndex: 10,
-        }}
-      >
-        {/* Title */}
-        <div>
-          <h2
-            style={{
-              color: "white",
-              fontSize: "24px",
-              fontWeight: 800,
-              margin: 0,
-              letterSpacing: "-0.5px",
-            }}
-          >
-            Book Your Ride 🚕
-          </h2>
-          <p
-            style={{ color: "#6b7280", fontSize: "13px", margin: "6px 0 0 0" }}
-          >
-            Enter locations and hit Book Now
-          </p>
-        </div>
+      <div className="max-w-4xl mx-auto p-5 flex flex-col gap-4">
 
-        {/* ── PICKUP INPUT ── */}
-        <div style={{ position: "relative" }}>
-          <label
-            style={{
-              color: "#9ca3af",
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            📍 Pickup Location
-          </label>
-          <input
-            type="text"
-            placeholder="Enter pickup location..."
-            value={pickupInput}
-            onChange={handlePickupChange}
-            style={{
-              width: "100%",
-              padding: "14px 16px",
-              borderRadius: "14px",
-              border: "1.5px solid rgba(255,255,255,0.1)",
-              background: "rgba(255,255,255,0.05)",
-              color: "white",
-              fontSize: "14px",
-              outline: "none",
-              transition: "border-color 0.2s",
-              boxSizing: "border-box",
-            }}
-            onFocus={(e) => (e.target.style.borderColor = "#f59e0b")}
-            onBlur={(e) => {
-              e.target.style.borderColor = "rgba(255,255,255,0.1)";
-              setTimeout(() => setPickupSuggestions([]), 200);
-            }}
-          />
-          {/* Pickup Suggestions */}
-          {pickupSuggestions.length > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                right: 0,
-                background: "#1f2937",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "12px",
-                marginTop: "6px",
-                zIndex: 50,
-                overflow: "hidden",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-              }}
-            >
-              {pickupSuggestions.map((f) => (
-                <button
-                  key={f.id}
-                  onMouseDown={() => selectPickup(f)}
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    background: "transparent",
-                    border: "none",
-                    borderBottom: "1px solid rgba(255,255,255,0.05)",
-                    color: "#d1d5db",
-                    fontSize: "13px",
-                    textAlign: "left",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "rgba(245,158,11,0.1)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
-                >
-                  <span>📍</span>
-                  <span
-                    style={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {f.place_name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ── DROP INPUT ── */}
-        <div style={{ position: "relative" }}>
-          <label
-            style={{
-              color: "#9ca3af",
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              display: "block",
-              marginBottom: "8px",
-            }}
-          >
-            🏁 Drop Location
-          </label>
-          <input
-            type="text"
-            placeholder="Enter drop location..."
-            value={dropInput}
-            onChange={handleDropChange}
-            style={{
-              width: "100%",
-              padding: "14px 16px",
-              borderRadius: "14px",
-              border: "1.5px solid rgba(255,255,255,0.1)",
-              background: "rgba(255,255,255,0.05)",
-              color: "white",
-              fontSize: "14px",
-              outline: "none",
-              transition: "border-color 0.2s",
-              boxSizing: "border-box",
-            }}
-            onFocus={(e) => (e.target.style.borderColor = "#ef4444")}
-            onBlur={(e) => {
-              e.target.style.borderColor = "rgba(255,255,255,0.1)";
-              setTimeout(() => setDropSuggestions([]), 200);
-            }}
-          />
-          {/* Drop Suggestions */}
-          {dropSuggestions.length > 0 && (
-            <div
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                right: 0,
-                background: "#1f2937",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "12px",
-                marginTop: "6px",
-                zIndex: 50,
-                overflow: "hidden",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-              }}
-            >
-              {dropSuggestions.map((f) => (
-                <button
-                  key={f.id}
-                  onMouseDown={() => selectDrop(f)}
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    background: "transparent",
-                    border: "none",
-                    borderBottom: "1px solid rgba(255,255,255,0.05)",
-                    color: "#d1d5db",
-                    fontSize: "13px",
-                    textAlign: "left",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "rgba(239,68,68,0.1)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
-                >
-                  <span>🏁</span>
-                  <span
-                    style={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {f.place_name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ── ETA & DISTANCE CARD (shows when route is drawn) ── */}
-        {(eta || distance) && (
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-            }}
-          >
-            <div
-              style={{
-                flex: 1,
-                background: "rgba(245,158,11,0.1)",
-                border: "1px solid rgba(245,158,11,0.2)",
-                borderRadius: "14px",
-                padding: "14px",
-                textAlign: "center",
-              }}
-            >
-              <p
-                style={{
-                  color: "#f59e0b",
-                  fontSize: "22px",
-                  fontWeight: 800,
-                  margin: 0,
-                }}
-              >
-                {eta ? `${Math.round(eta)} min` : "--"}
-              </p>
-              <p
-                style={{
-                  color: "#9ca3af",
-                  fontSize: "11px",
-                  margin: "4px 0 0 0",
-                }}
-              >
-                ETA
-              </p>
-            </div>
-            <div
-              style={{
-                flex: 1,
-                background: "rgba(99,102,241,0.1)",
-                border: "1px solid rgba(99,102,241,0.2)",
-                borderRadius: "14px",
-                padding: "14px",
-                textAlign: "center",
-              }}
-            >
-              <p
-                style={{
-                  color: "#818cf8",
-                  fontSize: "22px",
-                  fontWeight: 800,
-                  margin: 0,
-                }}
-              >
-                {distance ? `${(distance / 1000).toFixed(1)} km` : "--"}
-              </p>
-              <p
-                style={{
-                  color: "#9ca3af",
-                  fontSize: "11px",
-                  margin: "4px 0 0 0",
-                }}
-              >
-                Distance
-              </p>
-            </div>
+        {/* ── HEADER ───────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-zinc-500 font-medium">Good morning</p>
+            <h1 className="text-xl font-black text-black tracking-tight leading-tight">
+              Welcome back 👋
+            </h1>
           </div>
-        )}
-
-        {/* ── RIDE TYPE SELECTOR ── */}
-        <div>
-          <label
-            style={{
-              color: "#9ca3af",
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              display: "block",
-              marginBottom: "10px",
-            }}
+          <button
+            onClick={() => navigate("/rider/book")}
+            className="flex items-center gap-2 bg-black text-white text-sm font-bold px-4 py-2.5 rounded-xl hover:bg-zinc-800 transition-all shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
           >
-            🚗 Ride Type
-          </label>
-          <div style={{ display: "flex", gap: "10px" }}>
-            {[
-              { icon: "🚕", label: "Standard", price: "₹" },
-              { icon: "🚙", label: "Premium", price: "₹₹" },
-              { icon: "🚐", label: "XL", price: "₹₹₹" },
-            ].map((type, i) => (
+            <Navigation size={14} />
+            Book a Ride
+          </button>
+        </div>
+
+        {/* ── QUICK DESTINATIONS ──────────────────────────────────── */}
+        <div>
+          <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide mb-2">
+            Quick destinations
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {QUICK_DESTINATIONS.map(({ label, icon: Icon, address }) => (
               <button
-                key={type.label}
-                style={{
-                  flex: 1,
-                  padding: "12px 8px",
-                  borderRadius: "14px",
-                  border:
-                    i === 0
-                      ? "1.5px solid #f59e0b"
-                      : "1.5px solid rgba(255,255,255,0.08)",
-                  background:
-                    i === 0
-                      ? "rgba(245,158,11,0.12)"
-                      : "rgba(255,255,255,0.03)",
-                  color: i === 0 ? "#f59e0b" : "#9ca3af",
-                  cursor: "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "4px",
-                  transition: "all 0.2s",
-                }}
+                key={label}
+                onClick={() => navigate("/rider/book")}
+                className="bg-white border border-zinc-200 rounded-2xl p-3 text-left hover:border-black hover:shadow-md transition-all group"
               >
-                <span style={{ fontSize: "22px" }}>{type.icon}</span>
-                <span style={{ fontSize: "11px", fontWeight: 700 }}>
-                  {type.label}
-                </span>
-                <span style={{ fontSize: "11px" }}>{type.price}</span>
+                <div className="w-8 h-8 rounded-xl bg-zinc-100 group-hover:bg-black flex items-center justify-center mb-2 transition-all">
+                  <Icon size={14} className="text-zinc-600 group-hover:text-white transition-all" />
+                </div>
+                <p className="text-xs font-bold text-black">{label}</p>
+                <p className="text-[10px] text-zinc-400 mt-0.5 truncate">{address}</p>
               </button>
             ))}
           </div>
         </div>
 
-        {/* ── BOOK NOW BUTTON ── */}
-        {bookingStatus === null && (
-          <button
-            onClick={handleBookRide}
-            disabled={!canBook || loading}
-            style={{
-              padding: "16px",
-              borderRadius: "16px",
-              border: "none",
-              background: canBook
-                ? "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)"
-                : "rgba(255,255,255,0.06)",
-              color: canBook ? "white" : "#4b5563",
-              fontSize: "16px",
-              fontWeight: 800,
-              cursor: canBook ? "pointer" : "not-allowed",
-              letterSpacing: "0.3px",
-              transition: "all 0.3s",
-              transform: canBook ? "none" : "none",
-              boxShadow: canBook ? "0 8px 24px rgba(245,158,11,0.3)" : "none",
-            }}
-            onMouseEnter={(e) => {
-              if (canBook) e.currentTarget.style.transform = "translateY(-2px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-            }}
-          >
-            {loading ? "📡 Locating..." : "🚀 Book Now"}
-          </button>
-        )}
-
-        {/* ── SEARCHING STATUS ── */}
-        {bookingStatus === "searching" && (
-          <div
-            style={{
-              padding: "20px",
-              borderRadius: "16px",
-              background: "rgba(245,158,11,0.08)",
-              border: "1px solid rgba(245,158,11,0.2)",
-              textAlign: "center",
-            }}
-          >
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                border: "3px solid rgba(245,158,11,0.2)",
-                borderTop: "3px solid #f59e0b",
-                borderRadius: "50%",
-                margin: "0 auto 12px",
-                animation: "spin 1s linear infinite",
-              }}
-            />
-            <p style={{ color: "#f59e0b", fontWeight: 700, margin: 0 }}>
-              Searching for drivers...
-            </p>
-            <p
-              style={{
-                color: "#6b7280",
-                fontSize: "12px",
-                margin: "6px 0 0 0",
-              }}
-            >
-              This usually takes 10–30 seconds
-            </p>
+        {/* ── AI ASSISTANT CARD ────────────────────────────────────── */}
+        <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm">
+          {/* Header bar */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-black flex items-center justify-center">
+                <Sparkles size={12} className="text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-black leading-none">AI Assistant</p>
+                <p className="text-[9px] text-zinc-400 mt-0.5">Powered by Spring AI · updates every 15 min</p>
+              </div>
+            </div>
+            <span className="text-[9px] bg-zinc-100 text-zinc-500 px-2 py-0.5 rounded-full font-medium">
+              Coming soon
+            </span>
           </div>
-        )}
 
-        {/* ── BOOKED STATUS ── */}
-        {bookingStatus === "booked" && (
-          <div
-            style={{
-              padding: "20px",
-              borderRadius: "16px",
-              background: "rgba(34,197,94,0.08)",
-              border: "1px solid rgba(34,197,94,0.2)",
-              textAlign: "center",
-            }}
-          >
-            <div style={{ fontSize: "36px", marginBottom: "8px" }}>✅</div>
-            <p
-              style={{
-                color: "#4ade80",
-                fontWeight: 800,
-                margin: 0,
-                fontSize: "16px",
-              }}
-            >
-              Ride Booked!
-            </p>
-            <p
-              style={{
-                color: "#6b7280",
-                fontSize: "12px",
-                margin: "6px 0 0 0",
-              }}
-            >
-              Driver is on the way
-            </p>
+          {/* Insight tiles */}
+          <div className="grid grid-cols-3 divide-x divide-zinc-100">
+            {AI_INSIGHTS.map(({ id, icon: Icon, color, bg, border, title, value, sub }) => (
+              <div key={id} className={`p-3 ${bg}`}>
+                <div className={`flex items-center gap-1.5 mb-1`}>
+                  <Icon size={12} className={color} />
+                  <p className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wide">
+                    {title}
+                  </p>
+                </div>
+                <p className="text-xs font-black text-black leading-tight">{value}</p>
+                <p className="text-[9px] text-zinc-500 mt-0.5 leading-tight">{sub}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Placeholder prompt area */}
+          <div className="px-4 py-3 border-t border-zinc-100 flex items-center gap-2">
+            <div className="flex-1 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2 flex items-center gap-2">
+              <Sparkles size={11} className="text-zinc-400 shrink-0" />
+              <span className="text-xs text-zinc-400">
+                Ask AI: "Is it a good time to book a ride?"
+              </span>
+            </div>
             <button
-              onClick={() => setBookingStatus(null)}
-              style={{
-                marginTop: "12px",
-                padding: "10px 20px",
-                borderRadius: "10px",
-                border: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(255,255,255,0.05)",
-                color: "#9ca3af",
-                cursor: "pointer",
-                fontSize: "13px",
-              }}
+              disabled
+              className="w-7 h-7 rounded-xl bg-zinc-100 flex items-center justify-center cursor-not-allowed"
+              title="Spring AI integration coming soon"
             >
-              Book Another Ride
+              <ChevronRight size={12} className="text-zinc-400" />
             </button>
           </div>
-        )}
+        </div>
+
+        {/* ── STATS ROW ────────────────────────────────────────────── */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-white border border-zinc-200 rounded-2xl p-3 text-center shadow-sm">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <BarChart2 size={13} className="text-zinc-400" />
+            </div>
+            <p className="text-xl font-black text-black">{MOCK_STATS.totalRides}</p>
+            <p className="text-[10px] text-zinc-400 mt-0.5">Total rides</p>
+          </div>
+          <div className="bg-white border border-zinc-200 rounded-2xl p-3 text-center shadow-sm">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <IndianRupee size={13} className="text-zinc-400" />
+            </div>
+            <p className="text-xl font-black text-black">₹{MOCK_STATS.totalSpent.toLocaleString()}</p>
+            <p className="text-[10px] text-zinc-400 mt-0.5">Total spent</p>
+          </div>
+          <div className="bg-white border border-zinc-200 rounded-2xl p-3 text-center shadow-sm">
+            <div className="flex items-center justify-center gap-1 mb-1">
+              <Star size={13} className="text-amber-400 fill-amber-400" />
+            </div>
+            <p className="text-xl font-black text-black">{MOCK_STATS.avgRating}</p>
+            <p className="text-[10px] text-zinc-400 mt-0.5">Avg rating</p>
+          </div>
+        </div>
+
+        {/* ── RECENT RIDES ─────────────────────────────────────────── */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide">
+              Recent rides
+            </p>
+            <button
+              onClick={() => navigate("/rider/history")}
+              className="text-[10px] text-black font-semibold hover:underline flex items-center gap-0.5"
+            >
+              View all <ChevronRight size={10} />
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {MOCK_RECENT_RIDES.map((ride) => (
+              <div
+                key={ride.id}
+                className="bg-white border border-zinc-200 rounded-2xl p-3 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  {/* Route */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Clock size={10} className="text-zinc-400 shrink-0" />
+                      <span className="text-[10px] text-zinc-400">{ride.date}</span>
+                      <span className="text-[10px] text-zinc-300">·</span>
+                      <span className="text-[10px] text-zinc-400">{ride.type}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="flex flex-col items-center gap-0.5 mt-0.5 shrink-0">
+                        <div className="w-1.5 h-1.5 rounded-full bg-black" />
+                        <div className="h-3 border-l border-dashed border-zinc-300" />
+                        <div className="w-1.5 h-1.5 rounded bg-black" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-black truncate">{ride.from}</p>
+                        <p className="text-xs text-zinc-500 truncate mt-1">{ride.to}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fare + rating */}
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <p className="text-sm font-black text-black">₹{ride.fare}</p>
+
+                    {/* Rate button — shown only if not rated */}
+                    {!ride.rated ? (
+                      <button className="flex items-center gap-1 bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-lg hover:bg-amber-100 transition">
+                        <Star size={9} className="fill-amber-500 text-amber-500" />
+                        Rate driver
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            size={9}
+                            className={
+                              i < ride.rating
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-zinc-300"
+                            }
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Book again button */}
+                <button
+                  onClick={() => navigate("/rider/book")}
+                  className="mt-2.5 w-full flex items-center justify-center gap-1.5 border border-zinc-200 text-zinc-600 text-[10px] font-semibold py-1.5 rounded-xl hover:bg-zinc-50 hover:border-zinc-400 transition"
+                >
+                  <MapPin size={10} />
+                  Book again
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
-
-      {/* ── RIGHT PANEL — MAP ─────────────────────────────────────── */}
-
-      <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-        <RideMap />
-      </div>
-
-      {/* Spin animation */}
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        input::placeholder { color: #4b5563; }
-      `}</style>
     </div>
   );
 }

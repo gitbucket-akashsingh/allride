@@ -1,46 +1,45 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
-import Navbar from "@/features/landing/sections/Navbar";
 import RiderSidebar from "@/features/rider/components/RiderSidebar";
-
-const NAVBAR_HEIGHT = 88; // px — matches the navbar's actual rendered height
+import AppTopBar from "@/features/app/components/AppTopBar";
+import { SIDEBAR_WIDTH } from "@/shared/constants/layoutConstants";
+import { LayoutContext } from "@/app/context/LayoutContext";
 
 const RiderLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const sidebarWidth = sidebarCollapsed ? 72 : 260;
+  const sidebarWidth = sidebarCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0a" }}>
-      {/* ── NAVBAR — full width across the top ── */}
-      <Navbar />
-
-      {/* ── BODY ROW — sidebar + page content, sits below navbar ── */}
-      <div
-        style={{
-          display: "flex",
-          paddingTop: `${NAVBAR_HEIGHT}px`, // pushes content below the fixed navbar
-          minHeight: "100vh",
-        }}
-      >
-        {/* SIDEBAR */}
+    <div className="min-h-screen" style={{ background: "var(--content-bg)" }}>
+      
+        {/* Full Height SIDEBAR */}
         <RiderSidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed((prev) => !prev)}
-          navbarHeight={NAVBAR_HEIGHT}
+          
         />
 
+         {/* Content column — starts after sidebar */}
+        <LayoutContext.Provider value={{ sidebarCollapsed }}>
+        <div
+           className="min-h-screen flex flex-col transition-[margin-left] duration-300"
+           style={{ marginLeft: sidebarWidth }}
+        >
+
+        {/* TOP BAR — shows page title + user actions */}
+        <AppTopBar role="RIDER" />
+
         {/* PAGE CONTENT */}
-        <main
+        <main className="flex-1 w-full px-4 pb-6"
           style={{
-            marginLeft: `${sidebarWidth}px`,
             flex: 1,
             transition: "margin-left 0.3s cubic-bezier(0.4,0,0.2,1)",
-            minHeight: `calc(100vh - ${NAVBAR_HEIGHT}px)`,
           }}
         >
           <Outlet />
         </main>
-      </div>
+        </div>
+        </LayoutContext.Provider>
     </div>
   );
 };
