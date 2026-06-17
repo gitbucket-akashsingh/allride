@@ -1,9 +1,16 @@
 import phone1 from "/src/assets/images/phone1.png";
+import { APP_STORE_URL, GOOGLE_PLAY_URL } from "@/shared/constants/appStoreLinks";
+import AnimatedSection from "@/features/landing/components/AnimatedSection";
+import AppStoreIcon from "@/shared/components/AppStoreIcon";
+import GooglePlayIcon from "@/shared/components/GooglePlayIcon";
+import PhoneDeviceFrame from "@/shared/components/PhoneDeviceFrame";
+import PhoneAppPreview from "@/features/landing/components/PhoneAppPreview";
+
 
 function DownloadSection() {
   return (
-    <div className=" bg-black text-white overflow-hidden">
-      <section className="py-28 bg-zinc-950 relative overflow-hidden">
+    <div className="bg-zinc-100 text-zinc-900 dark:bg-black dark:text-white overflow-hidden">
+      <AnimatedSection id="download-app" className="py-28 bg-zinc-100 dark:bg-zinc-950 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
 
@@ -19,15 +26,21 @@ function DownloadSection() {
                 Anytime. Anywhere.
               </h2>
 
-              <p className="text-gray-400 text-lg leading-relaxed max-w-2xl mb-10">
+              <p className="text-zinc-500 dark:text-gray-400 text-lg leading-relaxed max-w-2xl mb-10">
                 Download the AllRide mobile app to book rides, track drivers,
                 manage trips, and experience seamless transportation directly
                 from your smartphone.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-5">
-                <button className="flex items-center justify-center gap-4 px-7 py-4 rounded-2xl bg-white text-black hover:scale-105 transition-transform duration-300 shadow-2xl font-semibold">
-                  <span className="text-3xl"></span>
+                <a 
+                href={APP_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Download AllRide on the App Store"
+                className="flex items-center justify-center gap-4 px-7 py-4 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-black hover:scale-105 transition-transform duration-300 shadow-2xl font-semibold">
+                  {/* App Store button */}
+<AppStoreIcon size={32} className="shrink-0" />
 
                   <div className="text-left">
                     <p className="text-xs font-medium">Download on the</p>
@@ -35,10 +48,16 @@ function DownloadSection() {
                       App Store
                     </h3>
                   </div>
-                </button>
+                </a>
 
-                <button className="flex items-center justify-center gap-4 px-7 py-4 rounded-2xl bg-green-500 text-black hover:scale-105 transition-transform duration-300 shadow-2xl font-semibold">
-                  <span className="text-3xl">▶</span>
+                <a
+                href={GOOGLE_PLAY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Get AllRide on Google Play"
+                 className="flex items-center justify-center gap-4 px-7 py-4 rounded-2xl bg-green-500 text-black hover:scale-105 transition-transform duration-300 shadow-2xl font-semibold">
+                  {/* Google Play button */}
+<GooglePlayIcon size={32} className="shrink-0" />
 
                   <div className="text-left">
                     <p className="text-xs font-medium">Get it on</p>
@@ -46,13 +65,16 @@ function DownloadSection() {
                       Google Play
                     </h3>
                   </div>
-                </button>
+                </a>
               </div>
             </div>
 
             {/* RIGHT PHONE MOCKUP */}
-            <div className="flex justify-center lg:justify-end">
-              <div className="relative w-[320px] sm:w-[380px] h-[650px] rounded-[48px] bg-black border border-white/10 shadow-[0_0_80px_rgba(255,255,255,0.08)] overflow-hidden">
+            <PhoneDeviceFrame>
+                 <PhoneAppPreview />
+            </PhoneDeviceFrame>
+            {/* <div className="flex justify-center lg:justify-end">
+              <div className="relative w-[320px] sm:w-[380px] h-[650px] rounded-[48px] bg-black border border-zinc-300 dark:border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.08)] dark:shadow-[0_0_80px_rgba(255,255,255,0.08)] overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-8 bg-zinc-900 rounded-b-3xl z-20"></div>
 
                 <img
@@ -69,7 +91,7 @@ function DownloadSection() {
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <p className="text-gray-400 text-sm">Ride Status</p>
-                        <h3 className="text-xl font-bold">Driver Arriving</h3>
+                        <h3 className="text-xl font-bold text-white">Driver Arriving</h3>
                       </div>
 
                       <div className="w-4 h-4 rounded-full bg-green-500 animate-pulse"></div>
@@ -82,10 +104,11 @@ function DownloadSection() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
+
           </div>
         </div>
-      </section>
+      </AnimatedSection>
     </div>
   );
 }

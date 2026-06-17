@@ -1,6 +1,9 @@
-import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { NAV_LINKS } from "@/features/landing/constants/sectionIds";
+import { scrollToSection } from "@/shared/utils/scrollToSection";
+import { useState, useEffect, useRef } from "react";
 import logo from "/src/assets/allride-logo.png";
+import {Moon, Sun, User, Car, LayoutDashboard, LogOut, ChevronDown, } from "lucide-react";
 import { useAuth } from "@/features/auth/context/AuthContext";
 
 function Navbar() {
@@ -26,7 +29,88 @@ function Navbar() {
   };
 
   const navigate = useNavigate();
+
+  const location = useLocation();
+
+  const handleLogoClick = () => {
+
+    setShowDropdown(false);
+
+    if (location.pathname === "/") {
+      // Already on landing — scroll to top (hero)
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      if (location.hash) {
+        navigate("/", { replace: true });
+      }
+      return;
+    }
+  
+    // Other pages — go to landing (ScrollToTop resets scroll)
+    navigate("/");
+  };
+
+const handleNavClick = (e, item) => {
+
+  setShowDropdown(false);
+  // Section links: /#features, /#drivers, /#download-app
+  if (item.href.startsWith("/#")) {
+    e.preventDefault();
+    const sectionId = item.href.slice(2); // remove "/#"
+
+    if (location.pathname === "/") {
+      scrollToSection(sectionId);
+    } else {
+      navigate("/", { state: { scrollTo: sectionId } });
+    }
+    return;
+  }
+
+  // Route links: /support
+  if (item.href.startsWith("/") && !item.href.includes("#")) {
+    e.preventDefault();
+    navigate(item.href);
+  }
+};
+
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (!showDropdown) return;
+  
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+  
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setShowDropdown(false);
+      }
+    };
+    const onPointerDown = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setShowDropdown(false);
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+  
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [showDropdown]);
+
+  useEffect(() => {
+    setShowDropdown(false);
+  }, [location.pathname]);
+
   // const { isAuthenticated, logout } = useAuth();
   const { isAuthenticated, logout, user } = useAuth();
 
@@ -40,16 +124,21 @@ function Navbar() {
   return (
     <>
       {/* NAVBAR */}
+      <div className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 pt-4 pointer-events-none">
+
       <header
-        className="fixed top-0 left-0 w-full z-200"
+        // className="fixed top-0 left-0 w-full z-200"
+        className="pointer-events-auto mx-auto max-w-7xl rounded-2xl border border-white/10 
+               bg-black/40 backdrop-blur-xl shadow-2xl"
         style={{
           background: "var(--navbar-bg)",
+          borderColor: "var(--navbar-border)",
           borderBottom: "1px solid var(--navbar-border)",
           backdropFilter: "blur(32px) saturate(180%)",
           WebkitBackdropFilter: "blur(32px) saturate(180%)",
           boxShadow: isDark
             ? "0 1px 40px rgba(0,0,0,0.6)"
-            : "0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)",
+            : "0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(248,250,252,0.5)",
           transition: "background 0.3s ease, box-shadow 0.3s ease",
         }}
       >
@@ -69,7 +158,7 @@ function Navbar() {
               gap: "12px",
               cursor: "pointer",
             }}
-            onClick={() => navigate("/")}
+            onClick={handleLogoClick}
           >
             <div
               style={{
@@ -125,21 +214,30 @@ function Navbar() {
             }}
             className="hidden lg:flex"
           >
-            {["Features", "Drivers", "Download App", "Support"].map((link) => (
+            {
+            // [
+            //   { label: "Features", href: "/#features" },
+            //   { label: "Drivers", href: "/#drivers" },
+            //   { label: "Download App", href: "/#download-app" },
+            //   { label: "Support", href: "/support" },
+            // ]
+            NAV_LINKS.map((item) => (
               <a
-                key={link}
-                href={`#${link.toLowerCase().replace(" ", "-")}`}
+                key={item.label}
+                href={item.href}
+                onClick={(e) => handleNavClick(e, item)}
                 style={{
                   color: "var(--text-secondary)",
                   textDecoration: "none",
                   transition: "color 0.2s",
+                  cursor: "pointer",
                 }}
-                onMouseEnter={(e) => (e.target.style.color = "#f59e0b")}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#f59e0b")}
                 onMouseLeave={(e) =>
-                  (e.target.style.color = "var(--text-secondary)")
+                  (e.currentTarget.style.color = "var(--text-secondary)")
                 }
               >
-                {link}
+                {item.label}
               </a>
             ))}
           </nav>
@@ -171,14 +269,21 @@ function Navbar() {
                 (e.currentTarget.style.background = "var(--bg-card)")
               }
             >
-              {isDark ? "🌙" : "☀️"}
+              {isDark ? (
+  <Moon size={16} strokeWidth={2} />
+) : (
+  <Sun size={16} strokeWidth={2} />
+)}
             </button>
 
             {/* NOT LOGGED IN */}
             {!isAuthenticated && (
               <>
                 <button
-                  onClick={() => navigate("/login")}
+                  onClick={() => {
+                   setShowDropdown(false);
+                   navigate("/login");
+}}
                   style={{
                     padding: "8px 20px",
                     borderRadius: "10px",
@@ -201,7 +306,7 @@ function Navbar() {
                 </button>
 
                 {/* GET STARTED DROPDOWN */}
-                <div style={{ position: "relative" }}>
+                <div ref={dropdownRef} style={{ position: "relative" }}>
                   <button
                     onClick={() => setShowDropdown((prev) => !prev)}
                     style={{
@@ -243,48 +348,53 @@ function Navbar() {
                       }}
                     >
                       {[
-                        {
-                          emoji: "🚕",
-                          label: "Signup as Rider",
-                          role: "rider",
-                        },
-                        {
-                          emoji: "🚖",
-                          label: "Signup as Driver",
-                          role: "driver",
-                        },
-                      ].map((item, i) => (
-                        <button
-                          key={item.role}
-                          onClick={() => {
-                            navigate(`/signup?role=${item.role}`);
-                            setShowDropdown(false);
-                          }}
-                          style={{
-                            width: "100%",
-                            padding: "14px 18px",
-                            background: "transparent",
-                            border: "none",
-                            borderTop:
-                              i > 0 ? "1px solid var(--border-color)" : "none",
-                            color: "var(--text-primary)",
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            textAlign: "left",
-                            cursor: "pointer",
-                            transition: "background 0.15s",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background =
-                              "var(--card-hover)")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = "transparent")
-                          }
-                        >
-                          {item.emoji} {item.label}
-                        </button>
-                      ))}
+  {
+    icon: User,
+    label: "Signup as Rider",
+    role: "rider",
+  },
+  {
+    icon: Car,
+    label: "Signup as Driver",
+    role: "driver",
+  },
+].map((item, i) => {
+  const Icon = item.icon;
+  return (
+    <button
+      key={item.role}
+      onClick={() => {
+        navigate(`/signup?role=${item.role}`);
+        setShowDropdown(false);
+      }}
+      style={{
+        width: "100%",
+        padding: "14px 18px",
+        background: "transparent",
+        border: "none",
+        borderTop: i > 0 ? "1px solid var(--border-color)" : "none",
+        color: "var(--text-primary)",
+        fontSize: "13px",
+        fontWeight: 600,
+        textAlign: "left",
+        cursor: "pointer",
+        transition: "background 0.15s",
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+      }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.background = "var(--card-hover)")
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.background = "transparent")
+      }
+    >
+      <Icon size={16} strokeWidth={2} />
+      {item.label}
+    </button>
+  );
+})}
                     </div>
                   )}
                 </div>
@@ -319,7 +429,7 @@ function Navbar() {
             {/* ✅ AFTER: LOGGED IN */}
             {/* LOGGED IN - USER PROFILE DROPDOWN */}
             {isAuthenticated && (
-              <div style={{ position: "relative" }}>
+              <div ref={dropdownRef} style={{ position: "relative" }}>
                 {/* USER BUTTON */}
                 <button
                   onClick={() => setShowDropdown((prev) => !prev)}
@@ -371,7 +481,7 @@ function Navbar() {
                       marginLeft: "4px",
                     }}
                   >
-                    ▼
+                    <ChevronDown size={14} strokeWidth={2} style={{ color: "var(--text-secondary)" }} />
                   </span>
                 </button>
 
@@ -423,7 +533,8 @@ function Navbar() {
                         (e.currentTarget.style.background = "transparent")
                       }
                     >
-                      <span style={{ fontSize: "16px" }}>📊</span> Dashboard
+                      <LayoutDashboard size={16} strokeWidth={2} />
+                      Dashboard
                     </button>
 
                     {/* PROFILE OPTION */}
@@ -490,7 +601,8 @@ function Navbar() {
                         (e.currentTarget.style.background = "transparent")
                       }
                     >
-                      <span style={{ fontSize: "16px" }}>🚪</span> Logout
+                      <LogOut size={16} strokeWidth={2} />
+                      Logout
                     </button>
                   </div>
                 )}
@@ -499,7 +611,7 @@ function Navbar() {
           </div>
         </div>
       </header>
-
+     </div>
       {/* Spacer so page content doesn't hide under fixed navbar */}
       <div style={{ height: "64px" }} />
     </>

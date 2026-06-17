@@ -1,10 +1,55 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-
+import { ArrowLeft, User, Car } from "lucide-react";
+import SignupForm from "@/features/auth/components/SignupForm";
 import logo from "@/assets/allride-logo.png";
+import { useSignup } from "@/features/auth/hooks/useSignup";
+
+import { Navigate, useSearchParams } from "react-router-dom";
+import { ALLOWED_SIGNUP_ROLES, getValidSignupRole,} from "@/features/auth/constants/signupRoles";
 
 function SignupPage() {
+
+  const [searchParams] = useSearchParams();
+  const roleParam = searchParams.get("role");
+  const validRole = getValidSignupRole(roleParam);
+
+  
+
+  const [fieldErrors, setFieldErrors] = useState({});
+  const { handleSignup, roleFromUrl } = useSignup();
+
+  const [loading, setLoading] = useState(false);
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setFieldErrors({}); // clear old errors on new submit
+
+    try {
+      setLoading(true);
+      await handleSignup(formData, setFieldErrors);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const roleLabel = roleFromUrl === "DRIVER" ? "Driver" : "Rider";
+  const RoleIcon = roleFromUrl === "DRIVER" ? Car : User;
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden relative flex items-center justify-center px-4 py-10">
       {/* BACK BUTTON */}
@@ -46,57 +91,26 @@ function SignupPage() {
             <p className="text-gray-400 mt-3 text-sm">
               Join the future of transportation
             </p>
+            <span
+              className={`mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold ${
+                roleFromUrl === "DRIVER"
+                  ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                  : "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30"
+              }`}
+            >
+              <RoleIcon size={14} strokeWidth={2} aria-hidden />
+              Signing up as {roleLabel}
+            </span>
           </div>
 
           {/* FORM */}
-          <form className="space-y-5">
-            {/* NAME */}
-            <div>
-              <label className="text-sm text-gray-400 mb-2 block">
-                Full Name
-              </label>
-
-              <input
-                type="text"
-                placeholder="Enter your full name"
-                className="w-full px-5 py-4 rounded-2xl bg-zinc-900 border border-white/10 focus:outline-none focus:border-yellow-500 transition-all"
-              />
-            </div>
-
-            {/* EMAIL */}
-            <div>
-              <label className="text-sm text-gray-400 mb-2 block">
-                Email Address
-              </label>
-
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full px-5 py-4 rounded-2xl bg-zinc-900 border border-white/10 focus:outline-none focus:border-yellow-500 transition-all"
-              />
-            </div>
-
-            {/* PASSWORD */}
-            <div>
-              <label className="text-sm text-gray-400 mb-2 block">
-                Password
-              </label>
-
-              <input
-                type="password"
-                placeholder="Create password"
-                className="w-full px-5 py-4 rounded-2xl bg-zinc-900 border border-white/10 focus:outline-none focus:border-yellow-500 transition-all"
-              />
-            </div>
-
-            {/* BUTTON */}
-            <button
-              type="submit"
-              className="w-full py-4 rounded-2xl bg-yellow-500 text-black font-black hover:scale-[1.02] transition-all duration-300 shadow-2xl"
-            >
-              Create Account
-            </button>
-          </form>
+          <SignupForm
+            formData={formData}
+            handleChange={handleChange}
+            handleSubmit={onSubmit}
+            loading={loading}
+            fieldErrors={fieldErrors}
+          />
 
           {/* Oauth2 */}
           <div className="relative my-8">

@@ -6,7 +6,7 @@ export const getRedirectPathByRole = (role) => {
       return "/rider/home";
 
     case USER_ROLES.DRIVER:
-      return "/driver/dashboard";
+      return "/driver/home";
 
     case USER_ROLES.ADMIN:
       return "/admin/dashboard";

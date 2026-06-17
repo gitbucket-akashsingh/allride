@@ -53,6 +53,10 @@ const useMapStore = create((set) => ({
         ...viewport,
       },
     })),
+
+    mapRef: null,
+    setMapRef: (ref) => set({ mapRef: ref }),
+
 }));
 
 export default useMapStore;

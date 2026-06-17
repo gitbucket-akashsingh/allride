@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
+import { authLabelClass, authInputClass, authMutedText, authLinkClass } from "@/features/auth/constants/authStyles";
 
 function LoginForm({ formData, handleChange, handleSubmit, loading }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* EMAIL */}
       <div>
-        <label className="text-sm text-gray-400 mb-2 block">
+        <label className={authLabelClass}>
           Email Address
         </label>
 
@@ -16,13 +17,13 @@ function LoginForm({ formData, handleChange, handleSubmit, loading }) {
           onChange={handleChange}
           placeholder="Enter your email"
           required
-          className="w-full px-5 py-4 rounded-2xl bg-zinc-900 border border-white/10 focus:outline-none focus:border-yellow-500 transition-all"
-        />
+          className={authInputClass()}
+          />
       </div>
 
       {/* PASSWORD */}
       <div>
-        <label className="text-sm text-gray-400 mb-2 block">Password</label>
+        <label className={authLabelClass}>Password</label>
 
         <input
           type="password"
@@ -31,8 +32,8 @@ function LoginForm({ formData, handleChange, handleSubmit, loading }) {
           onChange={handleChange}
           placeholder="Enter your password"
           required
-          className="w-full px-5 py-4 rounded-2xl bg-zinc-900 border border-white/10 focus:outline-none focus:border-yellow-500 transition-all"
-        />
+          className={authInputClass()}
+          />
       </div>
 
       {/* REMEMBER + FORGOT PASSWORD */}
@@ -48,7 +49,7 @@ function LoginForm({ formData, handleChange, handleSubmit, loading }) {
 
         <Link
           to="/forgot-password"
-          className="text-yellow-400 hover:text-yellow-300"
+          className={authLinkClass}
         >
           Forgot Password?
         </Link>

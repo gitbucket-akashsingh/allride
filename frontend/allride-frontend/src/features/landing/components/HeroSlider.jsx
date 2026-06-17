@@ -59,9 +59,9 @@ export default function HeroSlider() {
 
                 <p className="text-xl max-w-2xl">{slide.subtitle}</p>
 
-                <button className="mt-6 bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-3 rounded-xl font-semibold transition">
+                {/* <button className="mt-6 bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-3 rounded-xl font-semibold transition">
                   Get Started
-                </button>
+                </button> */}
               </div>
             </div>
           </SwiperSlide>

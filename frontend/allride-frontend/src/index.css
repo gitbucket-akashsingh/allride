@@ -7,6 +7,7 @@
 :root,
 .dark {
   --bg-page: #0a0a0a;
+  --content-bg: #09090b;
   --bg-panel: #111827;
   --bg-card: rgba(255, 255, 255, 0.05);
   --text-primary: #ffffff;
@@ -20,24 +21,43 @@
   --input-bg: rgba(255, 255, 255, 0.05);
   --input-border: rgba(255, 255, 255, 0.1);
   --card-hover: rgba(255, 255, 255, 0.05);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-shadow: 4px 0 32px rgba(0, 0, 0, 0.35);
+  --sidebar-nav-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-nav-text: #9ca3af;
+  --sidebar-nav-text-hover: #f8fafc;
+  --sidebar-accent-rider: #f59e0b;
+  --sidebar-accent-driver: #3b82f6;
+  --sidebar-active-rider: rgba(245, 158, 11, 0.14);
+  --sidebar-active-driver: rgba(59, 130, 246, 0.14);
 }
 
 .light {
   --bg-page: #f8fafc;
+  --content-bg: #f1f5f9;
   --bg-panel: #ffffff;
   --bg-card: rgba(0, 0, 0, 0.03);
   --text-primary: #0f172a;
   --text-secondary: #64748b;
   --text-muted: #94a3b8;
   --border-color: rgba(0, 0, 0, 0.08);
-  --navbar-bg: rgba(255, 255, 255, 0.35);
-  --navbar-border: rgba(255, 255, 255, 0.6);
+  --navbar-bg: rgba(248, 250, 252, 0.35);
+  /* --navbar-border: rgba(255, 255, 255, 0.6); */
   --navbar-border: rgba(0, 0, 0, 0.08);
   --sidebar-from: #ffffff;
   --sidebar-to: #f1f5f9;
   --input-bg: rgba(0, 0, 0, 0.03);
   --input-border: rgba(0, 0, 0, 0.12);
   --card-hover: rgba(0, 0, 0, 0.04);
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-shadow: 4px 0 24px rgba(0, 0, 0, 0.06);
+  --sidebar-nav-hover: rgba(0, 0, 0, 0.04);
+  --sidebar-nav-text: #64748b;
+  --sidebar-nav-text-hover: #0f172a;
+  --sidebar-accent-rider: #d97706;
+  --sidebar-accent-driver: #2563eb;
+  --sidebar-active-rider: rgba(245, 158, 11, 0.12);
+  --sidebar-active-driver: rgba(59, 130, 246, 0.1);
 }
 
 /* ── Apply theme to root ── */
@@ -49,6 +69,117 @@ html {
     color 0.3s ease;
 }
 
-* {
+.menu-item {
+  width: 100%;
+  padding: 14px 18px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-item:hover {
+  background: var(--card-hover);
+}
+
+.menu-item.border-t {
+  border-top: 1px solid var(--border-color);
+}
+
+/* #features,
+#drivers,
+#download-app,
+#hero,
+#live-map {
+  scroll-margin-top: 6rem; /* tune to navbar height */
+
+*/ * {
   box-sizing: border-box;
+}
+
+.app-sidebar {
+  background: linear-gradient(
+    180deg,
+    var(--sidebar-from) 0%,
+    var(--sidebar-to) 100%
+  );
+  border-right: 1px solid var(--sidebar-border);
+  box-shadow: var(--sidebar-shadow);
+  color: var(--text-primary);
+}
+
+.app-sidebar-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sidebar-nav-text);
+  background: transparent;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.app-sidebar-nav-btn:hover {
+  background: var(--sidebar-nav-hover);
+  color: var(--sidebar-nav-text-hover);
+}
+
+.app-sidebar-nav-btn.is-active-rider {
+  background: var(--sidebar-active-rider);
+  color: var(--sidebar-accent-rider);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.25);
+}
+
+.app-sidebar-nav-btn.is-active-driver {
+  background: var(--sidebar-active-driver);
+  color: var(--sidebar-accent-driver);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.25);
+}
+
+
+/* Layer 1 — vertical bob only */
+@keyframes phone-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+.phone-float {
+  animation: phone-float 6s ease-in-out infinite;
+}
+
+/* Pause bob on hover so tilt feels stable */
+.group:hover .phone-float {
+  animation-play-state: paused;
+}
+
+/* Layer 2 — smooth 3D tilt only */
+.phone-tilt {
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.group:hover .phone-tilt {
+  transform: translate3d(0, -4px, 0) rotateY(-10deg) rotateX(4deg) scale(1.02);
 }
