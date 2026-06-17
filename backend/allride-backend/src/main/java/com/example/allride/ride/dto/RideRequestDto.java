@@ -7,13 +7,13 @@ import lombok.Data;
 public class RideRequestDto {
     @NotNull
     private Double pickupLatitude;
-
     @NotNull
     private Double pickupLongitude;
+    private String pickupAddress;
 
     @NotNull
     private Double dropLatitude;
-
     @NotNull
     private Double dropLongitude;
+    private String dropAddress;
 }
