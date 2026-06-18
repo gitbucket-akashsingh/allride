@@ -48,6 +48,15 @@ jobs:
 
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+        
+      - name: Verify Vite
+        run: |
+         pwd
+         node --version
+         npm --version
+         npx vite --version
+         npm list vite
+         ls -la node_modules/.bin | grep vite
 
       - name: Build
         run: vercel build --token=$VERCEL_TOKEN
