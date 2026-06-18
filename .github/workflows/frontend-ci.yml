@@ -1,38 +1,51 @@
 name: Frontend CI
 
 on:
-    push:
-        branches:
-            - main
-            - develop
-        paths:
-            - "frontend/**"
+  pull_request:
+    branches:
+      - dev
+      - main
+    paths:
+      - "frontend/allride-frontend/**"
 
-    pull_request:
-        paths:
-            - "frontend/**"
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  validate:
+    runs-on: ubuntu-latest
 
-        defaults:
-            run:
-                working-directory: frontend
+    defaults:
+      run:
+        working-directory: frontend/allride-frontend
 
-        steps:
-            - uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 22
-                  cache: npm
-                  cache-dependency-path: frontend/package-lock.json
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/allride-frontend/package-lock.json
 
-            - run: npm ci
+      - name: Install Dependencies
+        run: npm ci
 
-            - run: npm run lint --if-present
+      - name: Lint
+        run: npm run lint
 
-            - run: npm test -- --watchAll=false
+      - name: Security Audit
+        run: npm audit --audit-level=high
 
-            - run: npm run build
+      - name: Build Validation
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: 
+          VITE_SOCKET_URL: 
+          VITE_MAPBOX_TOKEN:
