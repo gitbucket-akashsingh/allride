@@ -38,7 +38,7 @@ function LoginForm({ formData, handleChange, handleSubmit, loading }) {
 
       {/* REMEMBER + FORGOT PASSWORD */}
       <div className="flex items-center justify-between text-sm">
-        <label className="flex items-center gap-2 text-gray-400">
+        <label className={`flex items-center gap-2 ${authMutedText}`}>
           <input
             type="checkbox"
             name="rememberMe"
