@@ -3,10 +3,10 @@ name: Frontend CI
 on:
   push:
     branches:
-      - feature/workbench
+      - 'feature/**'
     paths:
       - "frontend/allride-frontend/**"
-      - ".github/workflows/frontend-ci.yml"
+      - ".github/workflows/**"
 
   pull_request:
     branches:
@@ -14,7 +14,7 @@ on:
       - main
     paths:
       - "frontend/allride-frontend/**"
-      - ".github/workflows/frontend-ci.yml"
+      - ".github/workflows/**"
 
 permissions:
   contents: read
