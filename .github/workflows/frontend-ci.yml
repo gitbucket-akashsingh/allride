@@ -1,22 +1,31 @@
 name: Frontend CI
 
 on:
+  push:
+    branches:
+      - feature/workbench
+    paths:
+      - "frontend/allride-frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+
   pull_request:
     branches:
       - dev
       - main
     paths:
       - "frontend/allride-frontend/**"
+      - ".github/workflows/frontend-ci.yml"
 
 permissions:
   contents: read
 
 concurrency:
-  group: frontend-ci-${{ github.event.pull_request.number }}
+  group: frontend-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   validate:
+    name: Frontend Validation
     runs-on: ubuntu-latest
 
     defaults:
@@ -24,20 +33,24 @@ jobs:
         working-directory: frontend/allride-frontend
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: frontend/allride-frontend/package-lock.json
 
       - name: Install Dependencies
         run: npm ci
 
-      - name: Lint
+      #################################################################
+      # ACTIVE CHECKS
+      #################################################################
+
+      - name: ESLint
         run: npm run lint
 
       - name: Security Audit
@@ -46,6 +59,68 @@ jobs:
       - name: Build Validation
         run: npm run build
         env:
-          VITE_API_BASE_URL: 
-          VITE_SOCKET_URL: 
-          VITE_MAPBOX_TOKEN:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_SOCKET_URL: ${{ vars.VITE_SOCKET_URL }}
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
+
+      #################################################################
+      # FUTURE CHECKS (UNCOMMENT WHEN NEEDED)
+      #################################################################
+
+      # ---------------------------------------------------------------
+      # TypeScript
+      # Requires:
+      # npm install -D typescript
+      # package.json:
+      # "type-check": "tsc --noEmit"
+      # ---------------------------------------------------------------
+      #
+      # - name: Type Check
+      #   run: npm run type-check
+
+      # ---------------------------------------------------------------
+      # Unit Tests
+      # Requires:
+      # npm install -D vitest jsdom
+      # package.json:
+      # "test": "vitest run"
+      # ---------------------------------------------------------------
+      #
+      # - name: Unit Tests
+      #   run: npm run test
+
+      # ---------------------------------------------------------------
+      # Coverage
+      # Requires:
+      # npm install -D @vitest/coverage-v8
+      # package.json:
+      # "coverage": "vitest run --coverage"
+      # ---------------------------------------------------------------
+      #
+      # - name: Coverage
+      #   run: npm run coverage
+
+      # ---------------------------------------------------------------
+      # Bundle Size Check
+      # Requires:
+      # scripts/check-bundle-size.sh
+      # ---------------------------------------------------------------
+      #
+      # - name: Bundle Size Check
+      #   run: ../../scripts/check-bundle-size.sh
+
+      # ---------------------------------------------------------------
+      # Lighthouse
+      # Requires:
+      # npm install -D @lhci/cli
+      # ---------------------------------------------------------------
+      #
+      # - name: Lighthouse
+      #   run: npm run lighthouse
+
+      #################################################################
+      # SUCCESS
+      #################################################################
+
+      - name: CI Completed
+        run: echo "Frontend validation passed."
