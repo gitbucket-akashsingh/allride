@@ -30,6 +30,9 @@
   --sidebar-accent-driver: #3b82f6;
   --sidebar-active-rider: rgba(245, 158, 11, 0.14);
   --sidebar-active-driver: rgba(59, 130, 246, 0.14);
+  --logo-box-bg: #000000;
+  --logo-box-border: rgba(255, 255, 255, 0.1);
+
 }
 
 .light {
@@ -58,6 +61,8 @@
   --sidebar-accent-driver: #2563eb;
   --sidebar-active-rider: rgba(245, 158, 11, 0.12);
   --sidebar-active-driver: rgba(59, 130, 246, 0.1);
+  --logo-box-bg: #ffffff;
+  --logo-box-border: rgba(0, 0, 0, 0.08);
 }
 
 /* ── Apply theme to root ── */

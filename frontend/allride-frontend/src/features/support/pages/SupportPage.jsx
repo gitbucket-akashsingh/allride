@@ -89,9 +89,9 @@ function SupportPage() {
   const location = useLocation();
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-white">
-      <div className="absolute top-0 left-0 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 py-16 lg:py-24">
+      <div className="fixed top-0 left-0 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="fixed bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-16 lg:py-24">
         {/* <Link
           to="/"
           className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400 hover:text-yellow-600 dark:hover:text-yellow-400 transition mb-8"
