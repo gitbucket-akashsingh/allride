@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import logo from "@/assets/allride-logo.png";
+import AllRideLogo from "@/shared/components/AllRideLogo";
+import { logoBoxClass } from "@/features/auth/constants/authStyles";
+
 
 function SidebarBrand({ collapsed }) {
   const navigate = useNavigate();
@@ -12,12 +14,11 @@ function SidebarBrand({ collapsed }) {
   className="w-full flex items-center gap-3 px-4 py-4 border-b transition-colors hover:bg-[var(--card-hover)]"
   style={{ borderColor: "var(--sidebar-border)" }}
 >
-  <div
-    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-    style={{ background: "var(--bg-panel)", border: "1px solid var(--border-color)" }}
-  >
-    <img src={logo} alt="AllRide" className="w-6 h-6 object-contain" />
-  </div>
+<div
+  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${logoBoxClass}`}
+>
+  <AllRideLogo className="w-6 h-6 object-contain" />
+</div>
   {!collapsed && (
     <div className="text-left min-w-0">
       <p className="font-black text-sm leading-none" style={{ color: "var(--text-primary)" }}>

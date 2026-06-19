@@ -1,13 +1,14 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import SidebarBrand from "@/shared/components/SidebarBrand";
+import { Home, LayoutDashboard, IndianRupee, History, User } from "lucide-react";
 
 const navItems = [
-  { icon: "🏠", label: "Home", path: "/driver/home" },
-  { icon: "📊", label: "Dashboard", path: "/driver/dashboard" },
-  { icon: "💰", label: "Earnings", path: "/driver/earnings" },
-  { icon: "📋", label: "Trip History", path: "/driver/history" },
-  { icon: "👤", label: "Profile", path: "/driver/profile" },
+  { icon: Home, label: "Home", path: "/driver/home" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/driver/dashboard" },
+  { icon: IndianRupee, label: "Earnings", path: "/driver/earnings" },
+  { icon: History, label: "Trip History", path: "/driver/history" },
+  { icon: User, label: "Profile", path: "/driver/profile" },
 ];
 
 const DriverSidebar = ({ collapsed, onToggle}) => {
@@ -70,7 +71,7 @@ const DriverSidebar = ({ collapsed, onToggle}) => {
           </div>
         )}
 
-        {collapsed && (
+        {/* {collapsed && (
           <div
             style={{
               width: "40px",
@@ -87,7 +88,7 @@ const DriverSidebar = ({ collapsed, onToggle}) => {
           >
             {initial}
           </div>
-        )}
+        )} */}
 
 <button
           type="button"
@@ -117,6 +118,8 @@ const DriverSidebar = ({ collapsed, onToggle}) => {
       >
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
+          const Icon = item.icon;
+
           return (
             <button
             key={item.path}
@@ -127,9 +130,7 @@ const DriverSidebar = ({ collapsed, onToggle}) => {
               isActive ? "is-active-driver" : ""
             } ${collapsed ? "justify-center py-3" : "px-3.5 py-3"}`}
           >
-            <span style={{ fontSize: "20px", flexShrink: 0 }}>
-              {item.icon}
-            </span>
+            <Icon size={18} strokeWidth={2} className="shrink-0" />
             {!collapsed && <span>{item.label}</span>}
           </button>
           );

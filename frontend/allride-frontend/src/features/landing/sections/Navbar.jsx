@@ -2,31 +2,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { NAV_LINKS } from "@/features/landing/constants/sectionIds";
 import { scrollToSection } from "@/shared/utils/scrollToSection";
 import { useState, useEffect, useRef } from "react";
-import logo from "/src/assets/allride-logo.png";
+import AllRideLogo from "@/shared/components/AllRideLogo";
+import { useTheme } from "@/shared/hooks/useTheme";
 import {Moon, Sun, User, Car, LayoutDashboard, LogOut, ChevronDown, } from "lucide-react";
 import { useAuth } from "@/features/auth/context/AuthContext";
 
 function Navbar() {
-  const [theme, setTheme] = useState(() => {
-    // Persist theme across refreshes
-    return localStorage.getItem("allride-theme") || "dark";
-  });
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-      root.classList.remove("light");
-    } else {
-      root.classList.add("light");
-      root.classList.remove("dark");
-    }
-    localStorage.setItem("allride-theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
+  const { toggleTheme, isDark } = useTheme();
 
   const navigate = useNavigate();
 
@@ -119,8 +101,6 @@ const handleNavClick = (e, item) => {
     navigate("/");
   };
 
-  const isDark = theme === "dark";
-
   return (
     <>
       {/* NAVBAR */}
@@ -165,15 +145,16 @@ const handleNavClick = (e, item) => {
                 width: "40px",
                 height: "40px",
                 borderRadius: "12px",
-                background: isDark ? "#000" : "#0f172a",
+                background: isDark ? "#f1f5f9" : "#000",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
+                boxShadow: isDark
+                  ? "0 2px 12px rgba(0,0,0,0.3)"
+                  : "0 2px 12px rgba(0,0,0,0.08)",
               }}
             >
-              <img
-                src={logo}
+              <AllRideLogo
                 alt="AllRide Logo"
                 style={{ width: "28px", height: "28px" }}
               />

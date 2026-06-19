@@ -79,7 +79,7 @@ const RiderSidebar = ({ collapsed, onToggle,}) => {
           </div>
         )}
 
-        {collapsed && (
+        {/* {collapsed && (
           <div
             style={{
               width: "40px",
@@ -96,7 +96,7 @@ const RiderSidebar = ({ collapsed, onToggle,}) => {
           >
             {(user?.fullName || user?.name)?.charAt(0)?.toUpperCase() || "R"}
           </div>
-        )}
+        )} */}
 
         <button
           type="button"

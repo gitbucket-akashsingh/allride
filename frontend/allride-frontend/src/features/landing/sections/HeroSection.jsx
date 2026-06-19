@@ -61,8 +61,7 @@ function HeroSection() {
                 type="button"
                 onClick={handleBookRide}
                   // onClick={() => showComingSoon("Ride booking")}
-                  className="px-8 py-4 rounded-2xl bg-black text-white font-semibold shadow-xl hover:-translate-y-1 hover:bg-gray-800 transition-all duration-300"
-                >
+                  className="px-8 py-4 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-semibold shadow-xl hover:-translate-y-1 hover:bg-gray-800 dark:hover:bg-zinc-100 transition-all duration-300"                >
                   Book Ride
                   {/* <FeatureBadge text="Coming Soon" /> */}
                 </button>
