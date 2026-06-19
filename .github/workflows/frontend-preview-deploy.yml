@@ -59,20 +59,8 @@ jobs:
           npm list vite
           ls -la node_modules/.bin | grep vite
 
-      # - name: Build 
-      #   run: vercel build --token=$VERCEL_TOKEN
+      - name: Build 
+        run: vercel build --token=$VERCEL_TOKEN
 
-      # FIX 1: Run your standard local build script using your project's node_modules
-      - name: Build Project
-        run: npm run build
-
-      # FIX 2: Check that the dist directory was built successfully in the runner workspace
-      - name: Verify Build Output
-        run: ls -la dist
-
-      # FIX 3: Upload the pre-built dist straight to Vercel (bypassing vercel build entirely)
       - name: Deploy Preview
-        run: vercel deploy --token=$VERCEL_TOKEN --cwd .
-
-      # - name: Deploy Preview
-      #   run: vercel deploy --prebuilt --token=$VERCEL_TOKEN
+        run: vercel deploy --prebuilt --token=$VERCEL_TOKEN
