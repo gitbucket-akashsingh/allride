@@ -11,6 +11,9 @@ import DownloadSection from "@/features/landing/sections/DownloadSection.jsx";
 import LiveTrackingSection from "@/features/landing/sections/LiveTrackingSection.jsx";
 // import Footer from "@/features/landing/sections/Footer.jsx";
 
+import AiFeaturesSection from "@/features/landing/sections/AiFeaturesSection.jsx";
+
+
 function LandingPage() {
 
   const location = useLocation();
@@ -31,14 +34,17 @@ function LandingPage() {
 
   return (
     <>
+   
       {/* <Navbar /> */}
       <HeroSection />
       <FeaturesSection />
+      <AiFeaturesSection />
       <RiderDriverSection />
       <CTASection />
       <DownloadSection />
       <LiveTrackingSection />
       {/* <Footer />   */}
+     
     </>
   );
 }
