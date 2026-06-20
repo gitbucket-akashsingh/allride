@@ -123,8 +123,8 @@ export default function AiChatWidget() {
           ) {
             clearInterval(intervalId);
           }
-        }, 38);
-      }, 200);
+        }, 18);
+      }, 50);
   
       return () => {
         clearTimeout(startDelay);
