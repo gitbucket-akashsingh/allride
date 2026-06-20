@@ -1,4 +1,4 @@
-name: Frontend Preview Deploy
+name: Frontend Vercel Deploy [Preview]
 
 on:
   push:
@@ -63,4 +63,4 @@ jobs:
         run: vercel build --token=$VERCEL_TOKEN
 
       - name: Deploy Preview
-        run: vercel deploy --prebuilt --token=$VERCEL_TOKEN
+        run: vercel deploy --prebuilt --token=$VERCEL_TOKEN --meta githubCommitRef="dev"

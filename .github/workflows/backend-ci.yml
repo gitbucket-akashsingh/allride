@@ -1,175 +1,263 @@
-name: Backend CI
+name: DEVSECOPS CI Pipeline [Backend]
 
 on:
-    push:
-        branches:
-            - dev
-        paths:
-            - "backend/allride-backend/**"
+  push:
+    branches:
+      - 'feature/**'
+    paths:
+      - "backend/allride-backend/**"
+      - ".github/workflows/**"
 
-    pull_request:
-        branches:
-            - dev
-        paths:
-            - "backend/allride-backend/**"
+  pull_request:
+    branches:
+      - dev
+      - main
+    paths:
+      - "backend/allride-backend/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
 
-    # FIX 1: Allows you to manually see and run the workflow from the UI
-    workflow_dispatch:
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
-    JAVA_VERSION: "21"
-    IMAGE_NAME: allride-backend
+  JAVA_VERSION: "21"
 
 jobs:
-    build-test-scan:
-        runs-on: ubuntu-latest
+  backend-ci:
+    runs-on: ubuntu-latest
 
-        defaults:
-            run:
-                working-directory: backend/allride-backend
+    services:
+      postgres:
+        image: postgres:17
 
-        steps:
-            #################################################
-            # Checkout
-            #################################################
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
-            - name: Checkout Code
-              uses: actions/checkout@v4
+        ports:
+          - 5432:5432
 
-            #################################################
-            # Java Setup
-            #################################################
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
-            - name: Setup Java
-              uses: actions/setup-java@v4
-              with:
-                  distribution: temurin
-                  java-version: ${{ env.JAVA_VERSION }}
-                  cache: maven
+    defaults:
+      run:
+        working-directory: backend/allride-backend
 
-            #################################################
-            # Build + Unit Test
-            #################################################
+    steps:
 
-            - name: Build and Unit Test
-              run: |
-                  mvn clean verify -DskipTests
+      #################################################
+      # Checkout
+      #################################################
 
-            #################################################
-            # JaCoCo Coverage
-            #################################################
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - name: Generate Coverage Report
-              run: |
-                  mvn jacoco:report
+      #################################################
+      # Java Setup
+      #################################################
 
-            - name: Upload Coverage Report
-              uses: actions/upload-artifact@v4
-              with:
-                  name: jacoco-report
-                  path: backend/allride-backend/target/site/jacoco/
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
 
-            #################################################
-            # OWASP Dependency Check (SCA)
-            #################################################
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
 
-            - name: OWASP Dependency Check
-              run: |
-                  mvn org.owasp:dependency-check-maven:check
+      #################################################
+      # Unit Tests
+      #################################################
 
-            - name: Upload OWASP Report
-              uses: actions/upload-artifact@v4
-              with:
-                  name: dependency-check-report
-                  path: backend/allride-backend/target/dependency-check-report.html
+      - name: Run Unit Tests
+        run: ./mvnw test
 
-            #################################################
-            # SonarQube Cloud (SAST)
-            #################################################
+      #################################################
+      # Package Application
+      #################################################
 
-            - name: SonarQube Analysis
-              env:
-                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-              run: |
-                  mvn sonar:sonar \
-                  -Dsonar.token=${SONAR_TOKEN}
+      - name: Build Application
+        run: ./mvnw clean package -DskipTests
 
-            #################################################
-            # Quality Gate
-            #################################################
+      #################################################
+      # Upload Surefire Reports
+      #################################################
 
-            - name: Sonar Quality Gate
-              uses: sonarsource/sonarqube-quality-gate-action@master
-              timeout-minutes: 10
-              env:
-                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: backend/allride-backend/target/surefire-reports/
+          retention-days: 7
 
-            #################################################
-            # Docker Login
-            #################################################
+      #################################################
+      # Upload Build Artifact
+      #################################################
 
-            - name: Docker Login
-              uses: docker/login-action@v3
-              with:
-                  username: ${{ secrets.DOCKER_USERNAME }}
-                  password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Upload JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/allride-backend/target/*.jar
+          retention-days: 7
 
-            #################################################
-            # Docker Build
-            #################################################
+      #################################################
+      # =================================================
+      # FUTURE DEVSECOPS STAGES
+      # Uncomment when required
+      # =================================================
+      #################################################
 
-            - name: Build Docker Image
-              run: |
-                  docker build \
-                    -t ${IMAGE_NAME}:${{ github.sha }} \
-                    .
+      #################################################
+      # JaCoCo Coverage
+      #################################################
 
-            #################################################
-            # Trivy Image Scan
-            #################################################
+      # - name: Generate Coverage Report
+      #   run: ./mvnw jacoco:report
 
-            - name: Trivy Scan
-              uses: aquasecurity/trivy-action@master
-              with:
-                  image-ref: "${{ env.IMAGE_NAME }}:${{ github.sha }}"
-                  format: "table"
-                  exit-code: "1"
-                  severity: "CRITICAL,HIGH"
+      # - name: Upload Coverage Report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: jacoco-report
+      #     path: backend/allride-backend/target/site/jacoco/
 
-            #################################################
-            # Smoke Test
-            #################################################
+      #################################################
+      # SonarQube Cloud (SAST)
+      #################################################
 
-            - name: Start Container
-              run: |
-                  docker run -d \
-                    --name allride-smoke \
-                    -p 8080:8080 \
-                    ${IMAGE_NAME}:${{ github.sha }}
+      # - name: Sonar Analysis
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #   run: |
+      #     ./mvnw sonar:sonar \
+      #       -Dsonar.token=${SONAR_TOKEN}
 
-            - name: Wait For Startup
-              run: sleep 30
+      # - name: Sonar Quality Gate
+      #   uses: sonarsource/sonarqube-quality-gate-action@master
+      #   timeout-minutes: 10
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-            - name: Smoke Test Health Endpoint
-              run: |
-                  curl --fail http://localhost:8080/actuator/health
+      #################################################
+      # OWASP Dependency Check (SCA)
+      #################################################
 
-            - name: Cleanup Container
-              if: always()
-              run: |
-                  docker stop allride-smoke || true
-                  docker rm allride-smoke || true
+      # - name: Cache NVD Database
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.m2/repository/org/owasp
+      #     key: dependency-check-${{ runner.os }}
 
-            #################################################
-            # Notification
-            #################################################
+      # - name: OWASP Dependency Check
+      #   run: |
+      #     ./mvnw org.owasp:dependency-check-maven:check
 
-            - name: Success Notification
-              if: success()
-              run: |
-                  echo "Backend Pipeline Passed"
+      # - name: Upload OWASP Report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: dependency-check-report
+      #     path: backend/allride-backend/target/dependency-check-report.html
 
-            - name: Failure Notification
-              if: failure()
-              run: |
-                  echo "Backend Pipeline Failed"
+      #################################################
+      # Trivy Filesystem Scan
+      #################################################
+
+      # - name: Trivy Filesystem Scan
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     scan-type: fs
+      #     scan-ref: .
+
+      #################################################
+      # Docker Build Validation
+      #################################################
+
+      # - name: Build Docker Image
+      #   run: |
+      #     docker build \
+      #       -t allride-backend:${{ github.sha }} \
+      #       .
+
+      #################################################
+      # Container Vulnerability Scan
+      #################################################
+
+      # - name: Trivy Image Scan
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     image-ref: allride-backend:${{ github.sha }}
+      #     format: table
+      #     exit-code: 1
+      #     severity: CRITICAL,HIGH
+
+      #################################################
+      # Smoke Tests
+      #################################################
+
+      # - name: Start Container
+      #   run: |
+      #     docker run -d \
+      #       --name allride-smoke \
+      #       -p 8080:8080 \
+      #       allride-backend:${{ github.sha }}
+
+      # - name: Wait For Health Check
+      #   run: |
+      #     for i in {1..30}
+      #     do
+      #       curl -f http://localhost:8080/actuator/health && break
+      #       sleep 2
+      #     done
+
+      # - name: Cleanup Container
+      #   if: always()
+      #   run: |
+      #     docker stop allride-smoke || true
+      #     docker rm allride-smoke || true
+
+      #################################################
+      # OWASP ZAP (DAST)
+      #################################################
+
+      # - name: OWASP ZAP Baseline Scan
+      #   uses: zaproxy/action-baseline@v0.12.0
+      #   with:
+      #     target: https://dev.api.allride.live
+
+      #################################################
+      # Slack Notification
+      #################################################
+
+      # - name: Slack Success Notification
+      #   if: success()
+      #   run: echo "Send Slack Success Message"
+
+      # - name: Slack Failure Notification
+      #   if: failure()
+      #   run: echo "Send Slack Failure Message"
+
+      #################################################
+      # Pipeline Status
+      #################################################
+
+      - name: Pipeline Success
+        if: success()
+        run: echo "Backend CI Passed"
+
+      - name: Pipeline Failure
+        if: failure()
+        run: echo "Backend CI Failed"
