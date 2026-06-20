@@ -1,4 +1,4 @@
-name: Frontend Production Deploy
+name: Frontend Vercel Deploy [Production]
 
 on:
   push:

@@ -156,35 +156,3 @@ html {
   font-weight: 700;
   box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.25);
 }
-
-
-/* Layer 1 — vertical bob only */
-@keyframes phone-float {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(0, -8px, 0);
-  }
-}
-
-.phone-float {
-  animation: phone-float 6s ease-in-out infinite;
-}
-
-/* Pause bob on hover so tilt feels stable */
-.group:hover .phone-float {
-  animation-play-state: paused;
-}
-
-/* Layer 2 — smooth 3D tilt only */
-.phone-tilt {
-  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
-  backface-visibility: hidden;
-}
-
-.group:hover .phone-tilt {
-  transform: translate3d(0, -4px, 0) rotateY(-10deg) rotateX(4deg) scale(1.02);
-}

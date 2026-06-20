@@ -1,0 +1,104 @@
+name: Backend Dev Deploy
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "backend/allride-backend/**"
+
+env:
+  JAVA_VERSION: "21"
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: Preview
+
+    defaults:
+      run:
+        working-directory: backend/allride-backend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # ==========================================
+      # FIX: Build the application first
+      # ==========================================
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
+      - name: Build Application Package
+        run: ./mvnw clean package -DskipTests  
+
+      # ==========================================
+      # Docker Compilation & Delivery
+      # ==========================================
+
+      - name: Login To Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/allride-backend-dev:latest \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/allride-backend-dev:${{ github.sha }} \
+            .
+
+      - name: Push Latest Tag
+        run: |
+          docker push \
+          ${{ secrets.DOCKERHUB_USERNAME }}/allride-backend-dev:latest
+
+      - name: Push SHA Tag
+        run: |
+          docker push \
+          ${{ secrets.DOCKERHUB_USERNAME }}/allride-backend-dev:${{ github.sha }}
+
+      # ==========================================
+      # Remote Server Infrastructure Deployment
+      # ==========================================    
+
+      - name: Deploy To Dev EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEV_EC2_HOST }}
+          username: ${{ secrets.DEV_EC2_USER }}
+          key: ${{ secrets.DEV_EC2_SSH_KEY }}
+
+          script: |
+            cd /home/ubuntu/allride-dev
+
+            docker compose pull
+
+            docker compose up -d
+
+            docker image prune -f
+
+      # ==========================================
+      # Slack Notification for Dev Branch
+      # ==========================================    
+      - name: Send Slack Notification
+        if: always()
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "${{ job.status == 'success' && '🛠️ *Dev Deployment Success*' || '🚨 *<!here> Dev Deployment FAILED!*' }}\n\n*Repository:* ${{ github.repository }}\n*Commit:* <https://github.com{{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>\n*Author:* <https://github.com{{ github.actor }}|@${{ github.actor }}>"
+            }  
