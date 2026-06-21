@@ -82,7 +82,7 @@ const RIDE_TYPES = [
 
 const QUICK_DESTINATIONS = [
   { id: "home",    label: "Home",    icon: Home,     pickupId: "kondapur",   dropoffId: "gachibowli" },
-  { id: "work",    label: "Work",    icon: Briefcase, pickupId: "kondapur",   dropoffId: "inorbit" },
+  { id: "work",    label: "Work",    icon: Briefcase, pickupId: "kondapur",   dropoffId: "gachibowli" },
   { id: "airport", label: "Airport", icon: Plane,    pickupId: "hitech",     dropoffId: "airport" },
 ];
 
