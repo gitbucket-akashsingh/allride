@@ -12,6 +12,7 @@ import {
   User,
   Search,
   ChevronRight,
+  Bell, 
 } from "lucide-react";
 
 // ── Locations & route quotes ─────────────────────────────────────────────
@@ -81,9 +82,15 @@ const RIDE_TYPES = [
 
 const QUICK_DESTINATIONS = [
   { id: "home",    label: "Home",    icon: Home,     pickupId: "kondapur",   dropoffId: "gachibowli" },
-  { id: "work",    label: "Work",    icon: Briefcase, pickupId: "kondapur",   dropoffId: "inorbit" },
+  { id: "work",    label: "Work",    icon: Briefcase, pickupId: "kondapur",   dropoffId: "gachibowli" },
   { id: "airport", label: "Airport", icon: Plane,    pickupId: "hitech",     dropoffId: "airport" },
 ];
+
+function getDemoOtp(pickupId, dropoffId) {
+  const key = `${pickupId || "0"}${dropoffId || "0"}`;
+  const num = key.split("").reduce((n, c) => n + c.charCodeAt(0), 4821);
+  return String(num % 10000).padStart(4, "0");
+}
 
 function getRouteQuote(pickupId, dropoffId) {
   if (!pickupId || !dropoffId) return null;
@@ -213,6 +220,54 @@ function StatusBar({ badge }) {
         <span className="flex gap-1">●●●</span>
       )}
     </div>
+  );
+}
+
+/** iOS-style push notification — overlays screen, auto-dismisses */
+function DemoRideNotification({ notification }) {
+  if (!notification) return null;
+
+  const { driverName, otp } = notification;
+
+  return (
+    <AnimatePresence>
+      {notification && (
+        <motion.div
+          key="ride-notification"
+          initial={{ y: -120, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -120, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 380, damping: 32 }}
+          className="absolute top-11 left-3 right-3 z-50 pointer-events-none"
+        >
+          <div className="rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-700 shadow-[0_12px_40px_rgba(0,0,0,0.18)] px-3 py-2.5">
+            <div className="flex items-start gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-yellow-500 flex items-center justify-center shrink-0 shadow-sm">
+                <Bell size={14} className="text-black" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-black text-zinc-900 dark:text-white">
+                    AllRide
+                  </p>
+                  <p className="text-[8px] text-zinc-400 shrink-0">now</p>
+                </div>
+                <p className="text-[10px] font-bold text-zinc-900 dark:text-white mt-0.5 leading-snug">
+                  Ride confirmed — your driver is coming
+                </p>
+                <p className="text-[9px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">
+                  {driverName} is on the way. Share OTP{" "}
+                  <span className="font-black text-yellow-600 dark:text-yellow-400 tracking-widest">
+                    {otp}
+                  </span>{" "}
+                  to start your trip.
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -531,6 +586,7 @@ function PhoneAppPreview() {
   const [rideType, setRideType] = useState("standard");
   const [openPicker, setOpenPicker] = useState(null); // "pickup" | "dropoff" | null
   const [bookedFare, setBookedFare] = useState(0);
+  const [notification, setNotification] = useState(null);
 
   const quote = getRouteQuote(pickupId, dropoffId);
 
@@ -541,6 +597,7 @@ function PhoneAppPreview() {
     setRideType("standard");
     setOpenPicker(null);
     setBookedFare(0);
+    setNotification(null); 
   }, []);
 
   const goToBooking = useCallback((prefill) => {
@@ -563,6 +620,24 @@ function PhoneAppPreview() {
     const t = setTimeout(() => resetDemo(), 10000);
     return () => clearTimeout(t);
   }, [screen, resetDemo]);
+
+  // Push notification when driver is found (tracking screen)
+useEffect(() => {
+  if (screen !== "tracking") return;
+
+  const otp = getDemoOtp(pickupId, dropoffId);
+
+  setNotification({
+    driverName: "Ravi K.",
+    otp,
+  });
+
+  const hide = setTimeout(() => setNotification(null), 4500);
+  return () => {
+    clearTimeout(hide);
+    setNotification(null);
+  };
+}, [screen, pickupId, dropoffId]);
 
   const handleQuickDest = (id) => {
     const dest = QUICK_DESTINATIONS.find((d) => d.id === id);
@@ -592,7 +667,7 @@ function PhoneAppPreview() {
   };
 
   return (
-    <div className="w-full h-full bg-zinc-100 dark:bg-zinc-950 flex flex-col text-zinc-900 dark:text-white overflow-hidden pointer-events-auto touch-manipulation">
+    <div className="relative w-full h-full bg-zinc-100 dark:bg-zinc-950 flex flex-col text-zinc-900 dark:text-white overflow-hidden pointer-events-auto touch-manipulation">
       <AnimatePresence mode="wait">
         <motion.div
           key={screen}
@@ -632,6 +707,7 @@ function PhoneAppPreview() {
           )}
         </motion.div>
       </AnimatePresence>
+      <DemoRideNotification notification={notification} />
     </div>
   );
 }
