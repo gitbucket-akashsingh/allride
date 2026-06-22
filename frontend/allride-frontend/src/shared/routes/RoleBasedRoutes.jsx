@@ -1,20 +1,25 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { getAuthData } from "@/features/auth/utils/authStorage";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 function RoleBasedRoute({ allowedRoles = [] }) {
-  const { token, user } = getAuthData();
+  const { loading, isAuthenticated, user } = useAuth();
 
-  // NOT AUTHENTICATED
-  if (!token || !user) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  // ROLE NOT ALLOWED
   if (!allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // ACCESS GRANTED
   return <Outlet />;
 }
 

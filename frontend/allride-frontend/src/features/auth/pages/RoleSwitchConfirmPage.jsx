@@ -39,8 +39,8 @@ function RoleSwitchConfirmPage() {
   const target = ROLE_META[targetRole];
   const CurrentIcon = current.icon;
 
-  const handleCreateNewAccount = () => {
-    logout();
+  const handleCreateNewAccount = async () => {
+    await logout();
     navigate(`/signup?role=${targetRole.toLowerCase()}`);
   };
 

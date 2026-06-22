@@ -9,6 +9,8 @@ import com.example.allride.auth.authentication.dto.request.SignupRequest;
 import com.example.allride.auth.authentication.dto.response.RefreshResponse;
 import com.example.allride.auth.authentication.dto.response.SignupResponse;
 import com.example.allride.auth.authentication.entity.User;
+import com.example.allride.auth.authentication.exception.EmailAlreadyExistsException;
+import com.example.allride.auth.authentication.exception.InvalidSignupRoleException;
 import com.example.allride.auth.common.enums.Role;
 import com.example.allride.auth.session.entity.UserSession;
 import com.example.allride.auth.session.repository.RefreshTokenRepository;
@@ -37,20 +39,19 @@ public class AuthenticationService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserSessionRepository userSessionRepository;
 
-//    SIGNUP Service
+    //    SIGNUP Service
     public SignupResponse signup(SignupRequest request) {
 
         if (request.getRole() == Role.ADMIN) {
-            throw new RuntimeException("Admin accounts cannot be created via signup");
+            throw new InvalidSignupRoleException("Admin accounts cannot be created via signup");
         }
         if (request.getRole() == null
                 || (request.getRole() != Role.RIDER && request.getRole() != Role.DRIVER)) {
-            throw new RuntimeException("Invalid role for signup"); // or a proper BaseException
+            throw new InvalidSignupRoleException("Invalid role for signup");
         }
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            // return "Email already exists!";
-            throw new RuntimeException("Email already exists");
+            throw new EmailAlreadyExistsException();
         }
 
         User user = User.builder()
@@ -70,7 +71,7 @@ public class AuthenticationService {
                 .build();
     }
 
-//    LOGIN Service
+    //    LOGIN Service
     public LoginResponse login(LoginRequest request, ClientInfo info) {
 
         authenticationManager.authenticate(
@@ -97,11 +98,12 @@ public class AuthenticationService {
         String refreshToken = jwtService.generateRefreshToken(user);
 
         refreshTokenRepository.save(RefreshToken.builder()
-                        .token(refreshToken)
-                        .expiryDate(new java.util.Date(System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000))
-                        .revoked(false)
-                        .user(user)
-                        .build()
+                .token(refreshToken)
+                .expiryDate(new java.util.Date(System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000))
+                .revoked(false)
+                .user(user)
+                .session(session)
+                .build()
         );
 
         return LoginResponse.builder()
@@ -137,23 +139,21 @@ public class AuthenticationService {
 //                .build();
     }
 
-//    CURRENT USER Service
+    //    CURRENT USER Service
     public CurrentUserResponse getCurrentUser(Authentication authentication) {
 
-        String email = authentication.getName();
-        User user= userRepository.findByEmail(email)
-                .orElseThrow();
+        User user = (User) authentication.getPrincipal();
 
         return CurrentUserResponse.builder()
-                        .id(user.getId())
-                        .fullName(user.getFullName())
-                        .phone(user.getPhone())
-                        .email(user.getEmail())
-                        .role(user.getRole().name())
-                        .build();
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
     }
 
-//    REFRESH TOKEN Service
+    //    REFRESH TOKEN Service
     public RefreshResponse refresh(RefreshRequest request) {
 
         String token = request.getRefreshToken();
@@ -177,7 +177,7 @@ public class AuthenticationService {
 
         User user = savedToken.getUser();
         String newAccessToken =
-                jwtService.generateAccessToken(user,session.getId());
+                jwtService.generateAccessToken(user, session.getId());
 
         return RefreshResponse.builder()
                 .accessToken(newAccessToken)

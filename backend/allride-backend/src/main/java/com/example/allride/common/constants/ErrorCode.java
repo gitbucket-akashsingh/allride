@@ -1,4 +1,4 @@
-package com.example.allride.common.exception;
+package com.example.allride.common.constants;
 
 public enum ErrorCode {
     USER_NOT_FOUND,

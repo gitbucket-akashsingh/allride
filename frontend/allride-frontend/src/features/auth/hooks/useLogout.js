@@ -1,26 +1,15 @@
 import { useNavigate } from "react-router-dom";
-
-import { clearAuthData } from "@/features/auth/utils/authStorage";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 function useLogout() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
-  const logout = () => {
-    // CLEAR AUTH STORAGE
-    clearAuthData();
-
-    // OPTIONAL:
-    // clear caches
-    // reset stores
-    // disconnect sockets
-
-    // REDIRECT TO LOGIN
-    navigate("/login", {
-      replace: true,
-    });
+  return async () => {
+    await logout();
+    navigate("/login", {replace: true });
   };
 
-  return logout;
 }
 
 export default useLogout;

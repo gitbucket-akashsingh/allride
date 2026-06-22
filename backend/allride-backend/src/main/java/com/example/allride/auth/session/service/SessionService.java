@@ -48,7 +48,7 @@ public class SessionService {
 
         User user = savedToken.getUser();
         String newAccessToken =
-                jwtService.generateAccessToken(user,session.getId());
+                jwtService.generateAccessToken(user, session.getId());
 
         return RefreshResponse.builder()
                 .accessToken(newAccessToken)
@@ -59,11 +59,20 @@ public class SessionService {
     //    LOGOUT Service
     public void logout(String token) {
 
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-                .orElseThrow();
+        if (token == null || token.isBlank()) {
+            return;
+        }
 
-        refreshToken.setRevoked(true);
-        refreshTokenRepository.save(refreshToken);
+
+//        RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
+//                .orElseThrow();
+//
+//        refreshToken.setRevoked(true);
+//        refreshTokenRepository.save(refreshToken);
+        refreshTokenRepository.findByToken(token).ifPresent(refreshToken -> {
+            refreshToken.setRevoked(true);
+            refreshTokenRepository.save(refreshToken);
+        });
     }
 
     public List<SessionResponse> getSessions(User user, Long currentSessionId) {

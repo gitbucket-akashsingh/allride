@@ -137,8 +137,8 @@ function DriverProfilePage() {
   const cancelledCount = rides.filter((r) => r.status === "CANCELLED").length;
   const totalEarned = completedRides.reduce((sum, r) => sum + (r.fare || 0), 0);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
   };
 

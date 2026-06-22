@@ -96,8 +96,8 @@ const handleNavClick = (e, item) => {
   // const { isAuthenticated, logout } = useAuth();
   const { isAuthenticated, logout, user } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
   };
 

@@ -99,7 +99,8 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "http://localhost:5174",
                 "https://allride.live",
-                "https://www.allride.live"
+                "https://www.allride.live",
+                "https://dev.allride.live"
         ));
         configuration.setAllowedMethods(List.of("*"));
         configuration.setAllowedHeaders(List.of("*"));
