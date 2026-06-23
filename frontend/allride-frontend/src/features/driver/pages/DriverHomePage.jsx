@@ -19,7 +19,11 @@ import {
   completeRide,
   cancelRide,
   getActiveRide,
+  goOnline,
+  goOffline,
+  updateDriverLocation,
 } from "@/features/driver/api/driverApi";
+import { useDriverProfile } from "@/features/driver/hooks/useDriverProfile";
 import { getRideStatus } from "@/features/rider/api/rideApi";
 import Toggle from "@/shared/ui/Toggle";
 
@@ -67,11 +71,13 @@ function RideRoute({ ride }) {
 
 function DriverHomePage() {
   const { user } = useAuth();
+  const { profile, isOnline: profileOnline, refetch: refetchProfile } = useDriverProfile();
 
   const setPickup = useMapStore((s) => s.setPickup);
   const setDestination = useMapStore((s) => s.setDestination);
 
   const [isOnline, setIsOnline] = useState(false);
+  const [onlineLoading, setOnlineLoading] = useState(false);
   const [activeRide, setActiveRide] = useState(null);
   const [dismissedIds, setDismissedIds] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
@@ -106,6 +112,33 @@ function DriverHomePage() {
     setPickup(null);
     setDestination(null);
   }, [setPickup, setDestination]);
+
+  // Sync online state from profile
+  useEffect(() => {
+    if (profile) {
+      setIsOnline(profile.online === true);
+    }
+  }, [profile]);
+
+  // GPS heartbeat while online
+  useEffect(() => {
+    if (!isOnline || activeRide) return;
+
+    if (!navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        updateDriverLocation(
+          pos.coords.latitude,
+          pos.coords.longitude
+        ).catch(() => {});
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 10000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [isOnline, activeRide]);
 
   // Restore active trip on refresh
   useEffect(() => {
@@ -149,11 +182,29 @@ function DriverHomePage() {
     return () => clearInterval(id);
   }, [activeRide?.rideId, activeRide?.status, syncRideToMap, clearMap]);
 
-  const handleToggleOnline = () => {
-    if (activeRide) return;
-    setIsOnline((prev) => !prev);
+  const handleToggleOnline = async () => {
+    if (activeRide || onlineLoading) return;
+
+    setOnlineLoading(true);
     setError(null);
-    setDismissedIds([]);
+
+    try {
+      if (isOnline) {
+        await goOffline();
+        setIsOnline(false);
+      } else {
+        await goOnline();
+        setIsOnline(true);
+      }
+      refetchProfile();
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        "Could not change online status. Please try again.";
+      setError(msg);
+    } finally {
+      setOnlineLoading(false);
+    }
   };
 
   const handleAccept = async (rideId) => {
@@ -251,7 +302,8 @@ function DriverHomePage() {
           {/* Online / offline toggle */}
           <button
             onClick={handleToggleOnline}
-            disabled={!!activeRide}
+            disabled={!!activeRide || onlineLoading}
+            label={onlineLoading ? "Updating..." : isOnline ? "You're online" : "You're offline"}
             className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all ${
               activeRide
                 ? "border-zinc-200 bg-zinc-50 cursor-not-allowed opacity-70"

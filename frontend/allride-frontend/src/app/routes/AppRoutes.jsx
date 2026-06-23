@@ -29,6 +29,8 @@ import DriverHomePage from "@/features/driver/pages/DriverHomePage";
 import DriverEarningsPage from "@/features/driver/pages/DriverEarningsPage";
 import DriverHistoryPage from "@/features/driver/pages/DriverHistoryPage";
 import DriverProfilePage from "@/features/driver/pages/DriverProfilePage";
+import DriverOnboardingPage from "@/features/driver/pages/DriverOnboardingPage";
+import DriverProfileGuard from "@/features/driver/components/DriverProfileGuard";
 
 import AdminDashboard from "@/features/admin/pages/AdminDashboard";
 import AdminHomePage from "@/features/admin/pages/AdminHomePage";
@@ -41,10 +43,6 @@ import UnauthorizedPage from "@/shared/pages/UnAuthorizedPage";
 import PrivacyPage from "@/features/legal/pages/PrivacyPage";
 import TermsPage from "@/features/legal/pages/TermsPage";
 import SupportPage from "@/features/support/pages/SupportPage";
-// ----------------------------------------------------------
-import MapTestPage from "@/features/map/pages/MapTestPage";
-import RiderBookingPage from "@/features/booking/pages/RiderBookingPage";
-// ----------------------------------------------------------
 
 import NotFoundPage from "@/shared/pages/NotFoundPage";
 import ScrollToTop from "@/app/routes/ScrollToTop";
@@ -93,15 +91,23 @@ function AppRoutes() {
           </Route>
         </Route>
 
-        {/* DRIVER ROUTES */}
-        <Route element={<ProtectedRoutes />}>
-          <Route element={<RoleBasedRoutes allowedRoles={["DRIVER"]} />}>
+          {/* DRIVER ROUTES */}
+          <Route element={<ProtectedRoutes />}>
+           <Route element={<RoleBasedRoutes allowedRoles={["DRIVER"]} />}>
+            {/* Onboarding — no sidebar, no profile required */}
+            <Route path="/driver/onboarding" element={<DriverOnboardingPage />} />
+
+            {/* Main driver app — requires profile */}
             <Route element={<DriverLayout />}>
-              <Route path="/driver/home" element={<DriverHomePage />} />
-              <Route path="/driver/dashboard" element={<DriverDashboard />} />
-              <Route path="/driver/earnings" element={<DriverEarningsPage />} />
-              <Route path="/driver/history" element={<DriverHistoryPage />} />
-              <Route path="/driver/profile" element={<DriverProfilePage />} />
+            {/* Outside DriverProfileGuard — pending drivers can view profile only */}
+                <Route path="/driver/profile" element={<DriverProfilePage />} />
+              <Route element={<DriverProfileGuard />}>
+                <Route path="/driver/home" element={<DriverHomePage />} />
+                <Route path="/driver/dashboard" element={<DriverDashboard />} />
+                <Route path="/driver/earnings" element={<DriverEarningsPage />} />
+                <Route path="/driver/history" element={<DriverHistoryPage />} />
+                {/* <Route path="/driver/profile" element={<DriverProfilePage />} /> */}
+              </Route>
             </Route>
           </Route>
         </Route>

@@ -1,5 +1,6 @@
-package com.example.allride.ride.dto;
+package com.example.allride.ride.dto.response;
 
+import com.example.allride.ride.dto.DriverSummaryDto;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,6 +12,8 @@ public class RideResponseDto {
     private String status;
     private String message;
     private Double fare;
+    private Long riderId;
+    private Long driverId;
     private Double pickupLatitude;
     private Double pickupLongitude;
     private String pickupAddress;
@@ -18,5 +21,7 @@ public class RideResponseDto {
     private Double dropLongitude;
     private String dropAddress;
     private String requestedAt;
+    private String startedAt;
     private String completedAt;
+    private DriverSummaryDto driver;
 }

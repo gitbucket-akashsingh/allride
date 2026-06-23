@@ -18,10 +18,12 @@ import {
   CreditCard,
   IndianRupee,
   MapPin,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { getMyRides } from "@/features/driver/api/driverApi";
 import Toggle from "@/shared/ui/Toggle";
+import { getDriverProfile } from "@/features/driver/api/driverApi";
 
 function getInitials(name) {
   if (!name) return "D";
@@ -110,14 +112,7 @@ function PrefRow({ icon: Icon, label, sub, right, onClick }) {
 // }
 
 // Static vehicle stub — wire to backend when driver profile API exists
-const VEHICLE = {
-  make: "Maruti Suzuki",
-  model: "Swift",
-  color: "White",
-  type: "Sedan",
-  plate: "TS-09-AB-1234",
-  year: "2021",
-};
+
 
 function DriverProfilePage() {
   const { user, logout } = useAuth();
@@ -136,11 +131,18 @@ function DriverProfilePage() {
   const completedCount = completedRides.length;
   const cancelledCount = rides.filter((r) => r.status === "CANCELLED").length;
   const totalEarned = completedRides.reduce((sum, r) => sum + (r.fare || 0), 0);
+  const [driverProfile, setDriverProfile] = useState(null);
 
   const handleLogout = async () => {
     await logout();
     navigate("/");
   };
+
+  useEffect(() => {
+    getDriverProfile()
+      .then((res) => setDriverProfile(res.data))
+      .catch(() => setDriverProfile(null));
+  }, []);
 
   const displayName = user?.fullName || user?.name || "Driver";
   const initials = getInitials(displayName);
@@ -151,9 +153,45 @@ function DriverProfilePage() {
     returnLabel: "Back to Profile",
   };
 
+  const ratingDisplay =
+  driverProfile?.rating && driverProfile.rating > 0
+    ? driverProfile.rating.toFixed(1)
+    : "—";
+
+    const isPendingApproval = driverProfile && driverProfile.approved === false;
+
+    const refreshProfile = () => {
+      getDriverProfile()
+        .then((res) => setDriverProfile(res.data))
+        .catch(() => setDriverProfile(null));
+    };
+
   return (
     <div className="bg-zinc-100 dark:bg-zinc-950 min-h-screen">
       <div className="max-w-2xl mx-auto p-5 flex flex-col gap-4">
+
+          {/* Pending approval banner */}
+          {isPendingApproval && (
+          <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 flex gap-3 items-start shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+              <Clock size={18} className="text-amber-700" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black text-amber-900">Pending admin approval</p>
+              <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+                Your profile was submitted successfully. You cannot go online or accept
+                rides until an admin approves your account.
+              </p>
+              <button
+                type="button"
+                onClick={refreshProfile}
+                className="mt-3 text-xs font-bold text-amber-900 underline hover:no-underline"
+              >
+                Refresh status
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Profile header */}
         <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden">
@@ -186,13 +224,20 @@ function DriverProfilePage() {
                 <Shield size={9} />
                 DRIVER
               </span>
-              <span className="flex items-center gap-1 text-[10px] text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full font-semibold">
-                <CheckCircle2 size={9} />
-                Verified
-              </span>
+              {driverProfile?.approved ? (
+                <span className="flex items-center gap-1 text-[10px] text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full font-semibold">
+                  <CheckCircle2 size={9} />
+                  Verified
+                </span>
+              ) : driverProfile ? (
+                <span className="flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-semibold">
+                  <Clock size={9} />
+                  Pending
+                </span>
+              ) : null}
               <span className="flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-semibold">
                 <Star size={9} className="fill-amber-500 text-amber-500" />
-                4.8
+                {ratingDisplay}
               </span>
             </div>
           </div>
@@ -244,19 +289,30 @@ function DriverProfilePage() {
           <InfoRow
             icon={Car}
             label="Vehicle"
-            value={`${VEHICLE.make} ${VEHICLE.model} (${VEHICLE.year})`}
+            value={
+              driverProfile
+                ? `${driverProfile.vehicleMake} ${driverProfile.vehicleModel}`
+                : "—"
+            }
           />
-          <InfoRow icon={CreditCard} label="Registration" value={VEHICLE.plate} />
-          <InfoRow icon={Car} label="Type & color" value={`${VEHICLE.type} · ${VEHICLE.color}`} />
+          <InfoRow
+            icon={CreditCard}
+            label="Registration"
+            value={driverProfile?.vehiclePlate}
+          />
+          <InfoRow
+            icon={Car}
+            label="Type & color"
+            value={
+              driverProfile
+                ? `${driverProfile.vehicleType || "—"} · ${driverProfile.vehicleColor || "—"}`
+                : "—"
+            }
+          />
           <InfoRow
             icon={Shield}
-            label="Documents"
-            value="License & RC verified"
-            badge={
-              <span className="text-[9px] font-bold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-lg shrink-0">
-                Active
-              </span>
-            }
+            label="License"
+            value={driverProfile?.licenseNumber}
           />
         </div>
 
@@ -271,12 +327,12 @@ function DriverProfilePage() {
             icon={Mail}
             label="Email address"
             value={user?.email}
-            badge={
+            badge={driverProfile?.approved && (
               <span className="flex items-center gap-1 text-[9px] font-bold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-lg shrink-0">
                 <CheckCircle2 size={8} />
                 Verified
               </span>
-            }
+            )}
           />
           <InfoRow icon={Phone} label="Phone number" value={user?.phone} />
           <InfoRow

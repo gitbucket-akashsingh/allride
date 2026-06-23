@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { cancelRide } from "@/features/rider/api/rideApi";
+import { X } from "lucide-react";
+
 import {
   Navigation,
   MapPin,
@@ -129,6 +132,8 @@ function RideTrackingPage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus]   = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
 
   const eta      = useMapStore((s) => s.eta);
   const distance = useMapStore((s) => s.distance);
@@ -145,7 +150,7 @@ function RideTrackingPage() {
       } else {
         // No active ride — show last completed
         const res = await getMyRides();
-        const last = (res.data || []).slice(-1)[0] ?? null;
+        const last = (res.data || [])[0] ?? null;
         setRide(last);
         setStatus(last?.status ?? null);
       }
@@ -164,8 +169,9 @@ function RideTrackingPage() {
   // Poll for status changes when ride is active
   useRidePolling(
     ride?.rideId,
-    (newStatus) => {
+    (newStatus, data) => {
       setStatus(newStatus);
+      if (data) setRide(data);
       if (newStatus === "COMPLETED" || newStatus === "CANCELLED") {
         loadRide(true);
       }
@@ -179,6 +185,26 @@ function RideTrackingPage() {
   const cfg = status ? (STATUS[status] ?? STATUS.REQUESTED) : null;
   const StatusIcon = cfg?.icon ?? Loader;
   const isActive = ["REQUESTED", "ACCEPTED", "STARTED"].includes(status);
+
+  const handleCancel = async () => {
+    if (!ride?.rideId) return;
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      const res = await cancelRide(ride.rideId);
+      setRide(res.data);
+      setStatus("CANCELLED");
+    } catch {
+      setCancelError("Could not cancel ride. Please try again.");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const driver = ride?.driver;
+  const vehicleLabel = driver
+    ? [driver.vehicleColor, driver.vehicleMake, driver.vehicleModel].filter(Boolean).join(" ")
+    : null;
 
   return (
     <div
@@ -335,8 +361,18 @@ function RideTrackingPage() {
                       🧑‍✈️
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black">Your Driver</p>
-                      <p className="text-[10px] text-zinc-400 mt-0.5">Driver #{ride.driverId ?? "—"}</p>
+                      <p className="text-sm font-black">
+                        {driver?.fullName ?? "Your Driver"}
+                      </p>
+                      <p className="text-[10px] text-zinc-400 mt-0.5">
+                        {vehicleLabel || "Vehicle details loading..."}
+                      </p>
+                      {driver?.vehiclePlate && (
+                        <p className="text-[10px] text-zinc-500 mt-0.5">
+                          {driver.vehiclePlate}
+                          {driver.rating != null && ` · ★ ${driver.rating.toFixed(1)}`}
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-1.5">
                       <button
@@ -396,6 +432,24 @@ function RideTrackingPage() {
                     Book a new ride
                   </button>
                 </div>
+              )}
+
+              {isActive && (
+                <>
+                  {cancelError && (
+                    <p className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                      {cancelError}
+                    </p>
+                  )}
+                  <button
+                    onClick={handleCancel}
+                    disabled={cancelling}
+                    className="w-full flex items-center justify-center gap-1.5 border border-red-200 text-red-600 text-xs font-semibold py-2 rounded-xl hover:bg-red-50 transition disabled:opacity-50"
+                  >
+                    <X size={12} />
+                    {cancelling ? "Cancelling..." : "Cancel ride"}
+                  </button>
+                </>
               )}
 
               {/* Ride ID + refresh hint */}

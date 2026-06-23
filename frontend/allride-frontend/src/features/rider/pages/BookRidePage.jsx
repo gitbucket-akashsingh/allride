@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Navigation, MapPin, ShieldCheck, Car, Clock3, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Navigation, MapPin, ShieldCheck, Car, Clock3, User, X, IndianRupee } from "lucide-react";
 import RideMap from "@/features/map/components/RideMap";
 import LocationAutocomplete from "@/features/map/components/LocationAutocomplete";
 import useMapStore from "@/features/map/store/mapStore";
-import { requestRide } from "@/features/rider/api/rideApi";
+import { requestRide, cancelRide, estimateFare } from "@/features/rider/api/rideApi";
 import useRidePolling from "@/features/rider/hooks/useRidePolling";
 
 const RIDE_TYPES = [
@@ -15,12 +16,16 @@ const RIDE_TYPES = [
 const PAGE_HEIGHT = "calc(100vh - 64px)";
 
 function BookRidePage() {
+  const navigate = useNavigate();
   const [selectedRideType, setSelectedRideType] = useState("standard");
   const [bookingStatus, setBookingStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState(null);
   const [rideId, setRideId] = useState(null);
   const [fare, setFare] = useState(null);
+  const [estimatedFare, setEstimatedFare] = useState(null);
+  const [estimating, setEstimating] = useState(false);
 
   const pickup         = useMapStore((s) => s.pickup);
   const destination    = useMapStore((s) => s.destination);
@@ -30,6 +35,27 @@ function BookRidePage() {
   const setDestination = useMapStore((s) => s.setDestination);
 
   const canSearch = pickup?.latitude && destination?.latitude;
+
+  useEffect(() => {
+    if (!canSearch || bookingStatus !== null) {
+      setEstimatedFare(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setEstimating(true);
+      try {
+        const res = await estimateFare({ pickup, destination });
+        setEstimatedFare(res.data.fare);
+      } catch {
+        setEstimatedFare(null);
+      } finally {
+        setEstimating(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [pickup, destination, canSearch, bookingStatus]);
 
   const handleSearch = async () => {
     if (!canSearch) return;
@@ -47,12 +73,30 @@ function BookRidePage() {
     }
   };
 
+  const handleCancel = async () => {
+    if (!rideId) return;
+    setCancelling(true);
+    setError(null);
+    try {
+      await cancelRide(rideId);
+      handleReset();
+    } catch {
+      setError("Could not cancel ride. Please try again.");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   useRidePolling(
     rideId,
     (status) => {
-      if (status === "ACCEPTED") setBookingStatus("booked");
+      if (status === "ACCEPTED") {
+        navigate("/rider/tracking");
+      }
       if (status === "CANCELLED") {
-        setBookingStatus(null);
+        handleReset();
+        // setBookingStatus(null);
+        // setRideId(null);
         setError("Ride was cancelled.");
       }
     },
@@ -63,8 +107,9 @@ function BookRidePage() {
     setBookingStatus(null);
     setRideId(null);
     setFare(null);
-    setPickup(null);
-    setDestination(null);
+    // setEstimatedFare(null);
+    // setPickup(null);
+    // setDestination(null);
     setError(null);
   };
 
@@ -73,11 +118,9 @@ function BookRidePage() {
       className="flex gap-4 p-4 bg-zinc-100 dark:bg-zinc-950"
       style={{ height: PAGE_HEIGHT }}
     >
-      {/* ── LEFT CARD ─────────────────────────────────────────────── */}
       <div className="w-[340px] shrink-0 bg-white rounded-2xl shadow-lg border border-zinc-200 flex flex-col overflow-hidden">
         <div className="flex flex-col gap-3 p-4 overflow-y-auto flex-1">
 
-          {/* Header */}
           <div>
             <h1 className="text-xl font-black tracking-tight text-black leading-tight">
               Get a ride
@@ -88,7 +131,6 @@ function BookRidePage() {
             </div>
           </div>
 
-          {/* Location inputs */}
           <div>
             <LocationAutocomplete
               label="Pickup"
@@ -106,7 +148,6 @@ function BookRidePage() {
             />
           </div>
 
-          {/* Route summary */}
           {eta && distance && (
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-blue-50 border border-blue-100 rounded-xl p-2.5 text-center">
@@ -120,7 +161,27 @@ function BookRidePage() {
             </div>
           )}
 
-          {/* Ride type */}
+          {canSearch && bookingStatus === null && (
+            <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <IndianRupee size={14} className="text-zinc-500" />
+                <div>
+                  <p className="text-[9px] text-zinc-400 uppercase tracking-wide font-semibold">
+                    Estimated fare
+                  </p>
+                  <p className="text-lg font-black text-black">
+                    {estimating
+                      ? "..."
+                      : estimatedFare != null
+                        ? `₹${Math.round(estimatedFare)}`
+                        : "—"}
+                  </p>
+                </div>
+              </div>
+              <p className="text-[9px] text-zinc-400">Before you book</p>
+            </div>
+          )}
+
           <div>
             <p className="text-[10px] text-zinc-400 font-semibold uppercase tracking-wide mb-1.5">
               Ride type
@@ -144,16 +205,15 @@ function BookRidePage() {
             </div>
           </div>
 
-          {/* Schedule & Rider */}
           <div className="grid grid-cols-2 gap-1.5">
-            <div className="flex items-center gap-2 bg-zinc-100 rounded-xl px-2.5 py-2 cursor-pointer hover:bg-zinc-200 transition">
+            <div className="flex items-center gap-2 bg-zinc-100 rounded-xl px-2.5 py-2">
               <Clock3 size={12} className="text-zinc-500 shrink-0" />
               <div>
                 <p className="text-[9px] text-zinc-400 leading-none">Schedule</p>
                 <p className="text-[11px] font-semibold text-black mt-0.5">Now</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-zinc-100 rounded-xl px-2.5 py-2 cursor-pointer hover:bg-zinc-200 transition">
+            <div className="flex items-center gap-2 bg-zinc-100 rounded-xl px-2.5 py-2">
               <User size={12} className="text-zinc-500 shrink-0" />
               <div>
                 <p className="text-[9px] text-zinc-400 leading-none">Rider</p>
@@ -162,14 +222,12 @@ function BookRidePage() {
             </div>
           </div>
 
-          {/* Error */}
           {error && (
             <p className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
               {error}
             </p>
           )}
 
-          {/* Search button */}
           {bookingStatus === null && (
             <button
               onClick={handleSearch}
@@ -184,48 +242,29 @@ function BookRidePage() {
             </button>
           )}
 
-          {/* Searching */}
           {bookingStatus === "searching" && (
-            <div className="text-center py-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+            <div className="text-center py-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
               <div className="w-6 h-6 border-[3px] border-amber-200 border-t-amber-500 rounded-full mx-auto animate-spin" />
               <p className="text-sm font-bold text-amber-700">Finding your driver...</p>
               {fare && (
                 <p className="text-xl font-black text-black">₹{Math.round(fare)}</p>
               )}
-              <p className="text-[10px] text-zinc-500">Estimated fare · 10–30 sec</p>
-            </div>
-          )}
-
-          {/* Booked */}
-          {bookingStatus === "booked" && (
-            <div className="text-center py-3 bg-green-50 border border-green-200 rounded-xl">
-              <div className="text-2xl mb-1">✅</div>
-              <p className="font-black text-green-700">Ride Booked!</p>
-              <p className="text-[10px] text-zinc-500 mt-0.5">Driver is on the way</p>
-              <button onClick={handleReset} className="mt-2 text-xs text-zinc-500 underline">
-                Book another ride
+              <p className="text-[10px] text-zinc-500">Estimated fare · auto-redirects when driver accepts</p>
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="w-full flex items-center justify-center gap-1.5 border border-red-200 text-red-600 text-xs font-semibold py-2 rounded-xl hover:bg-red-50 transition disabled:opacity-50"
+              >
+                <X size={12} />
+                {cancelling ? "Cancelling..." : "Cancel ride"}
               </button>
             </div>
           )}
 
-          {/* Promo card */}
-          <div className="bg-black text-white rounded-2xl p-3 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-full blur-2xl" />
-            <div className="flex items-center gap-2.5 relative z-10">
-              <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                <Car size={14} />
-              </div>
-              <div>
-                <h3 className="font-bold text-xs">Ride Comfort+</h3>
-                <p className="text-[10px] text-zinc-400 mt-0.5 leading-snug">Premium drivers and live tracking.</p>
-              </div>
-            </div>
-          </div>
-
+          
         </div>
       </div>
 
-      {/* ── RIGHT CARD — Map ──────────────────────────────────────── */}
       <div className="flex-1 bg-white rounded-2xl shadow-lg border border-zinc-200 overflow-hidden relative hidden lg:block">
         <RideMap />
 
@@ -251,10 +290,14 @@ function BookRidePage() {
                 <span><strong className="text-black text-xs">{eta} min</strong> ETA</span>
               </div>
             )}
+            {estimatedFare != null && (
+              <div className="mt-1.5 pt-1.5 border-t border-zinc-100 text-[10px] text-zinc-500">
+                Est. fare: <strong className="text-black text-xs">₹{Math.round(estimatedFare)}</strong>
+              </div>
+            )}
           </div>
         )}
       </div>
-
     </div>
   );
 }

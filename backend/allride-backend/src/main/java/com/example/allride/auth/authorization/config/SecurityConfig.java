@@ -23,9 +23,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 import java.util.List;
 
+@EnableMethodSecurity
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -47,15 +50,26 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        // Rider APIs
-                        .requestMatchers("/rides/**").hasRole("RIDER")
-                        // Driver APIs
+                        // Ride APIs — role-specific
+                        .requestMatchers(HttpMethod.POST, "/rides/estimate").hasRole("RIDER")
+                        .requestMatchers(HttpMethod.POST, "/rides/request").hasRole("RIDER")
+                        .requestMatchers(HttpMethod.GET, "/rides/active").hasAnyRole("RIDER", "DRIVER")
+                        .requestMatchers(HttpMethod.GET, "/rides/available").hasRole("DRIVER")
+                        .requestMatchers(HttpMethod.POST,
+                                "/rides/*/accept",
+                                "/rides/*/start",
+                                "/rides/*/complete").hasRole("DRIVER")
+                        .requestMatchers(HttpMethod.GET,
+                                "/rides/my-rides",
+                                "/rides/*/status").hasAnyRole("RIDER", "DRIVER")
+                        .requestMatchers(HttpMethod.POST, "/rides/*/cancel").hasAnyRole("RIDER", "DRIVER")
+                        // Driver profile & status APIs
                         .requestMatchers("/driver/**").hasRole("DRIVER")
                         // Admin APIs
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        // Swagger Tools
+                        // Swagger
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        .anyRequest().authenticated() // Don't Allow all other endpoints without login
+                        .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authEntryPoint)
