@@ -2,16 +2,15 @@ package com.example.allride.driver.controller;
 
 import com.example.allride.driver.dto.request.CreateDriverProfileRequest;
 import com.example.allride.driver.dto.response.DriverProfileResponse;
+import com.example.allride.driver.dto.response.DriverStatusResponse;
 import com.example.allride.driver.service.DriverService;
 import com.example.allride.driver.dto.LocationDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/driver")
@@ -19,40 +18,37 @@ import org.springframework.web.bind.annotation.RestController;
 public class DriverController {
 
     private final DriverService driverService;
-//    private final User user;
 
-//    @PostMapping("/driver/online")
-//    public void goOnline(@AuthenticationPrincipal CustomUserDetails user) {
-////        Long driverId = getUserId(auth);
-//        driverService.setOnline(user.getId(), true);
-//    }
-
-
-       @PostMapping("/profile")
-       public ResponseEntity<DriverProfileResponse> createProfile(@RequestBody CreateDriverProfileRequest request,
-                                                                  Authentication authentication) {
-           return ResponseEntity
-                   .status(HttpStatus.CREATED)
-                   .body(driverService.createProfile(request, authentication));
-       }
-
-       @PostMapping("/online")
-       public void goOnline(Authentication auth) {
-           Long driverId = Long.parseLong(auth.getName());
-           driverService.setOnline(driverId, true);
+    @PostMapping("/profile")
+    public ResponseEntity<DriverProfileResponse> createProfile(
+            @Valid @RequestBody CreateDriverProfileRequest request,
+            Authentication authentication) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(driverService.createProfile(request, authentication));
     }
 
-    @PostMapping("offline")
-    public void goOffline(Authentication auth) {
-//        Long driverId = getUserId(auth);
-        Long driverId = Long.parseLong(auth.getName());
-        driverService.setOnline(driverId, false);
+    @GetMapping("/profile")
+    public ResponseEntity<DriverProfileResponse> getProfile(Authentication authentication) {
+        return ResponseEntity.ok(driverService.getProfile(authentication));
     }
 
-    @PostMapping("location")
-    public void updateLocation(@RequestBody LocationDto dto, Authentication auth) {
-//        Long driverId = getUserId(auth);
-        Long driverId = Long.parseLong(auth.getName());
-        driverService.updateLocation(driverId, dto);
+    @PostMapping("/online")
+    public ResponseEntity<DriverStatusResponse> goOnline(Authentication authentication) {
+        return ResponseEntity.ok(driverService.goOnline(authentication));
     }
+
+    @PostMapping("/offline")
+    public ResponseEntity<DriverStatusResponse> goOffline(Authentication authentication) {
+        return ResponseEntity.ok(driverService.goOffline(authentication));
+    }
+
+    @PostMapping("/location")
+    public ResponseEntity<Void> updateLocation(
+            @Valid @RequestBody LocationDto dto,
+            Authentication authentication) {
+        driverService.updateLocation(authentication, dto);
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -98,7 +98,7 @@ function PaymentPage() {
       .then((res) => {
         const completed = (res.data || [])
           .filter((r) => r.status === "COMPLETED" && r.fare)
-          .reverse();
+          ;
         setRides(completed);
       })
       .catch(() => setRides([]))

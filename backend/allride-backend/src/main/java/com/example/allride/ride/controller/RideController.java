@@ -1,12 +1,10 @@
 package com.example.allride.ride.controller;
 
 import com.example.allride.auth.authentication.entity.User;
-import com.example.allride.ride.entity.Ride;
-import com.example.allride.ride.repository.RideRepository;
-import com.example.allride.ride.mapper.RideMapper;
+import com.example.allride.ride.dto.response.FareEstimateResponseDto;
+import com.example.allride.ride.dto.request.RideRequestDto;
+import com.example.allride.ride.dto.response.RideResponseDto;
 import com.example.allride.ride.service.RideService;
-import com.example.allride.ride.dto.RideRequestDto;
-import com.example.allride.ride.dto.RideResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,21 +20,29 @@ import java.util.List;
 public class RideController {
 
     private final RideService rideService;
-    private final RideRepository rideRepository;
-    private final RideMapper rideMapper;
+
+    @PostMapping("/estimate")
+    @PreAuthorize("hasRole('RIDER')")
+    public ResponseEntity<FareEstimateResponseDto> estimateFare(
+            @Valid @RequestBody RideRequestDto rideRequestDto) {
+        return ResponseEntity.ok(rideService.estimateFare(rideRequestDto));
+    }
 
     @PostMapping("/request")
     @PreAuthorize("hasRole('RIDER')")
-    public ResponseEntity<RideResponseDto> requestRide(@Valid
-                                                           @RequestBody RideRequestDto rideRequestDto,
-                                                       Authentication authentication) {
+    public ResponseEntity<RideResponseDto> requestRide(
+            @Valid @RequestBody RideRequestDto rideRequestDto,
+            Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(rideService.requestRide(rideRequestDto, user.getId()));
+    }
 
-        User user=(User) authentication.getPrincipal();
-        //     OR
-        Long userId = ((User) authentication.getPrincipal()).getId();
-
-         return ResponseEntity.ok(rideService.requestRide(rideRequestDto, user.getId()));
-
+    @GetMapping("/active")
+    public ResponseEntity<RideResponseDto> getActiveRide(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return rideService.getActiveRide(user.getId(), user.getRole().name())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 
     @GetMapping("/{rideId}/status")
@@ -44,78 +50,55 @@ public class RideController {
             @PathVariable Long rideId,
             Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-        Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
-        return ResponseEntity.ok(rideMapper.mapToDto(ride));
+        return ResponseEntity.ok(rideService.getRideStatus(rideId, user.getId()));
     }
-
 
     @GetMapping("/available")
     @PreAuthorize("hasRole('DRIVER')")
-    public ResponseEntity<List<RideResponseDto>> getAvailableRides() {
-        return ResponseEntity.ok(rideService.getAvailableRides());
+    public ResponseEntity<List<RideResponseDto>> getAvailableRides(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(rideService.getAvailableRides(user.getId()));
     }
 
     @PostMapping("/{rideId}/accept")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<RideResponseDto> acceptRide(
             @PathVariable Long rideId,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-
-        return ResponseEntity.ok(
-                rideService.acceptRide(rideId, user.getId())
-        );
+        return ResponseEntity.ok(rideService.acceptRide(rideId, user.getId()));
     }
-
 
     @PostMapping("/{rideId}/start")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<RideResponseDto> startRide(
             @PathVariable Long rideId,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-
-        return ResponseEntity.ok(
-                rideService.startRide(rideId, user.getId())
-        );
+        return ResponseEntity.ok(rideService.startRide(rideId, user.getId()));
     }
 
     @PostMapping("/{rideId}/complete")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<RideResponseDto> completeRide(
             @PathVariable Long rideId,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-
-        return ResponseEntity.ok(
-                rideService.completeRide(rideId, user.getId())
-        );
+        return ResponseEntity.ok(rideService.completeRide(rideId, user.getId()));
     }
 
     @PostMapping("/{rideId}/cancel")
+    @PreAuthorize("hasAnyRole('RIDER', 'DRIVER')")
     public ResponseEntity<RideResponseDto> cancelRide(
             @PathVariable Long rideId,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-
-        return ResponseEntity.ok(
-                rideService.cancelRide(rideId, user.getId())
-        );
+        return ResponseEntity.ok(rideService.cancelRide(rideId, user.getId()));
     }
 
     @GetMapping("/my-rides")
     public ResponseEntity<List<RideResponseDto>> getMyRides(Authentication auth) {
-
         User user = (User) auth.getPrincipal();
-
-        return ResponseEntity.ok(
-                rideService.getMyRides(user.getId(), user.getRole().name())
-        );
+        return ResponseEntity.ok(rideService.getMyRides(user.getId(), user.getRole().name()));
     }
-
 }

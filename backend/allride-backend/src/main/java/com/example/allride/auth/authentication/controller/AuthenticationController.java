@@ -88,6 +88,8 @@ public class AuthenticationController {
         return ResponseEntity.ok(response);
     }
 
+    // CURRENT USER
+
     @Operation(
             summary = "Get current logged-in user",
             description = "Returns currently authenticated user details"
@@ -102,6 +104,8 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.getCurrentUser(authentication));
     }
 
+    // REFRESH TOKEN
+
     @Operation(
             summary = "Refresh access token",
             description = "Generates a new access token using refresh token"
@@ -115,4 +119,6 @@ public class AuthenticationController {
 
         return ResponseEntity.ok(authenticationService.refresh(request));
     }
+
+
 }

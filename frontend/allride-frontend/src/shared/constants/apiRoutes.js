@@ -2,16 +2,22 @@ export const API_ROUTES = {
   AUTH: {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
-    // REGISTER: '/auth/signup',
     REFRESH: "/auth/refresh",
   },
 
   RIDES: {
-    CREATE: "/rides",
-    HISTORY: "/rides/history",
+    ESTIMATE: "/rides/estimate",
+    REQUEST: "/rides/request",
+    ACTIVE: "/rides/active",
+    MY_RIDES: "/rides/my-rides",
+    STATUS: (rideId) => `/rides/${rideId}/status`,
+    CANCEL: (rideId) => `/rides/${rideId}/cancel`,
   },
 
   DRIVER: {
-    STATUS: "/driver/status",
+    PROFILE: "/driver/profile",
+    ONLINE: "/driver/online",
+    OFFLINE: "/driver/offline",
+    LOCATION: "/driver/location",
   },
 };

@@ -1,5 +1,6 @@
 package com.example.allride.common.exception;
 
+import com.example.allride.common.constants.ErrorCode;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 

@@ -1,20 +1,21 @@
 import { Navigate, Outlet } from "react-router-dom";
-// check useAuth or useLogin
-// import { useAuth } from "@/features/auth/context/AuthContext";
-import { getAuthData } from "@/features/auth/utils/authStorage";
+import { useAuth } from "@/features/auth/context/AuthContext";
 
 function ProtectedRoute() {
-  // const { isAuthenticated } = useAuth();
-  const { token } = getAuthData();
+  const { loading, isAuthenticated } = useAuth();
 
-  if (!token) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  // if (loading) {
-  //   return <div>Loading...</div>;
-  // }
 
-  // USER AUTHENTICATED
   return <Outlet />;
 }
 

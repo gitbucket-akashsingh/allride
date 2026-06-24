@@ -85,8 +85,7 @@ function DriverHistoryPage() {
     const fetchRides = async () => {
       try {
         const res = await getMyRides();
-        const sorted = [...(res.data || [])].reverse();
-        setRides(sorted);
+        setRides(res.data || []);
       } catch {
         setError("Could not load trip history. Please try again.");
       } finally {

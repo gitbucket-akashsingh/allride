@@ -40,3 +40,13 @@ export const getAuthData = () => {
 export const clearAuthData = () => {
   localStorage.removeItem(STORAGE_KEY);
 };
+
+
+export const updateAccessToken = (accessToken) => {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+
+  const data = JSON.parse(raw);
+  data.tokens.accessToken = accessToken;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+};

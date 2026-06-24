@@ -128,8 +128,8 @@ function ProfilePage() {
   const completedCount = rides.filter((r) => r.status === "COMPLETED").length;
   const cancelledCount = rides.filter((r) => r.status === "CANCELLED").length;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
   };
 
