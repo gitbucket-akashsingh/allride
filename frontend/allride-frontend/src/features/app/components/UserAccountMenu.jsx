@@ -49,10 +49,9 @@ function UserAccountMenu({ variant = "full" }) {
     };
   }, [open]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
-    setOpen(false);
   };
 
   const go = (path) => {

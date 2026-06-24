@@ -2,14 +2,15 @@ package com.example.allride.ride.lifecycle;
 
 import com.example.allride.ride.entity.Ride;
 import com.example.allride.ride.enums.RideStatus;
+import com.example.allride.ride.exception.RideInvalidStateException;
 
 import java.time.LocalDateTime;
 
-public class StartedState implements RideState{
+public class StartedState implements RideState {
 
     @Override
     public void startRide(Ride ride) {
-        throw new RuntimeException("Ride already started");
+        throw new RideInvalidStateException("Ride already started");
     }
 
     @Override

@@ -12,12 +12,19 @@ import java.util.Optional;
 
 public interface RideRepository extends JpaRepository<Ride, Long> {
 
-    List<Ride> findByPassengerId(Long passengerId);
-    List<Ride> findByDriverId(Long driverId);
+    List<Ride> findByRiderIdOrderByRequestedAtDesc(Long riderId);
+
+    List<Ride> findByDriverIdOrderByRequestedAtDesc(Long driverId);
+
     List<Ride> findByStatus(RideStatus status);
+
+    Optional<Ride> findFirstByRiderIdAndStatusInOrderByRequestedAtDesc(
+            Long riderId, List<RideStatus> statuses);
+
+    Optional<Ride> findFirstByDriverIdAndStatusInOrderByRequestedAtDesc(
+            Long driverId, List<RideStatus> statuses);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT r FROM Ride r WHERE r.id = :id")
     Optional<Ride> findByIdForUpdate(Long id);
-
 }

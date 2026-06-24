@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser } from "../api/authApi";
-
+import {  logoutUser } from "../services/authService";
 import {
   getAccessToken,
   clearAuthData,
@@ -9,40 +9,9 @@ import {
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+  
   const [user, setUser] = useState(null);
-
   const [loading, setLoading] = useState(true);
-
-  /*
-    INITIAL AUTH CHECK
-  */
-
-  // useEffect(() => {
-  //   const initializeAuth = async () => {
-  //     try {
-  //       const token = getAccessToken();
-
-  //       if (!token) {
-  //         setLoading(false);
-  //         return;
-  //       }
-
-  //       const response = await getCurrentUser();
-
-  //       setUser(response.data);
-  //     } catch (error) {
-  //       console.error("Auto login failed", error);
-
-  //       clearAuthData();
-
-  //       setUser(null);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   initializeAuth();
-  // }, []);
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -73,7 +42,6 @@ export function AuthProvider({ children }) {
   */
 
   const login = (userData) => {
-    localStorage.setItem("allride-user", JSON.stringify(userData));
 
     setUser(userData);
   };
@@ -82,13 +50,10 @@ export function AuthProvider({ children }) {
     LOGOUT
   */
 
-  const logout = () => {
-    // localStorage.removeItem("user");
-    // localStorage.removeItem("token");
-    // localStorage.removeItem("refreshToken");
-    clearAuthData();
-    setUser(null);
-  };
+    const logout = async () => {
+      await logoutUser();
+      setUser(null);
+    };
 
   return (
     <AuthContext.Provider

@@ -1,4 +1,4 @@
-package com.example.allride.ride.dto;
+package com.example.allride.ride.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

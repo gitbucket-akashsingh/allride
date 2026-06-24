@@ -1,22 +1,22 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { getAuthData } from "@/features/auth/utils/authStorage";
+import { useAuth } from "@/features/auth/context/AuthContext";
+import { getRedirectPathByRole } from "@/features/auth/utils/roleRedirect";
 
 function PublicRoute() {
-  const { token, user } = getAuthData();
+  const { loading, isAuthenticated, user } = useAuth();
 
-  // USER ALREADY LOGGED IN
-  if (token && user) {
-    // REDIRECT BASED ON ROLE
-    if (user.role === "RIDER") {
-      return <Navigate to="/rider/home" replace />;
-    }
-
-    if (user.role === "DRIVER") {
-      return <Navigate to="/driver/home" replace />;
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
-  // USER NOT LOGGED IN
+  if (isAuthenticated && user?.role) {
+    return <Navigate to={getRedirectPathByRole(user.role)} replace />;
+  }
+
   return <Outlet />;
 }
 

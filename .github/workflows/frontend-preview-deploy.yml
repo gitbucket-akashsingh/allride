@@ -1,4 +1,4 @@
-name: Frontend Preview Deploy
+name: Frontend Vercel Deploy [Preview]
 
 on:
   push:
@@ -63,4 +63,10 @@ jobs:
         run: vercel build --token=$VERCEL_TOKEN
 
       - name: Deploy Preview
-        run: vercel deploy --prebuilt --token=$VERCEL_TOKEN
+        id: deploy
+        run: |
+          DEPLOY_URL=$(vercel deploy --prebuilt --token=$VERCEL_TOKEN --meta githubCommitRef="dev")
+          echo "DEPLOY_URL=$DEPLOY_URL" >> $GITHUB_ENV
+
+      - name: Assign Custom Domain
+        run: vercel alias set ${{ env.DEPLOY_URL }} ${{ secrets.VERCEL_DEV_DOMAIN }} --token=$VERCEL_TOKEN

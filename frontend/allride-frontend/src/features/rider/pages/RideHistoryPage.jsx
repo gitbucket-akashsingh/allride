@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getMyRides, cancelRide } from "@/features/rider/api/rideApi";
 import {
   Clock,
   Star,
@@ -12,7 +13,6 @@ import {
   Filter,
   IndianRupee,
 } from "lucide-react";
-import { getMyRides } from "@/features/rider/api/rideApi";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -92,9 +92,7 @@ function RideHistoryPage() {
     const fetchRides = async () => {
       try {
         const res = await getMyRides();
-        // Most recent first
-        const sorted = [...(res.data || [])].reverse();
-        setRides(sorted);
+        setRides(res.data || []);
       } catch {
         setError("Could not load ride history. Please try again.");
       } finally {
@@ -119,6 +117,25 @@ function RideHistoryPage() {
     .reduce((sum, r) => sum + r.fare, 0);
   const completedCount = rides.filter((r) => r.status === "COMPLETED").length;
   const cancelledCount = rides.filter((r) => r.status === "CANCELLED").length;
+
+  const [cancellingId, setCancellingId] = useState(null);
+
+  const handleCancel = async (rideId) => {
+    setCancellingId(rideId);
+    try {
+      await cancelRide(rideId);
+      setRides((prev) =>
+        prev.map((r) => (r.rideId === rideId ? { ...r, status: "CANCELLED" } : r))
+      );
+    } catch {
+      setError("Could not cancel ride.");
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const isInProgress = (status) =>
+    ["REQUESTED", "ACCEPTED", "STARTED"].includes(status);
 
   return (
     <div className="bg-zinc-100 dark:bg-zinc-950 min-h-screen">
@@ -353,6 +370,24 @@ function RideHistoryPage() {
                         {ride.dropAddress || `${ride.dropLatitude}, ${ride.dropLongitude}`}
                         </p>
                       </div>
+                    </div>
+                  )}
+
+                 {isInProgress(ride.status) && (
+                    <div className="px-3 pb-2 flex gap-2">
+                      <button
+                        onClick={() => navigate("/rider/tracking")}
+                        className="flex-1 bg-black text-white text-[10px] font-bold py-1.5 rounded-xl hover:bg-zinc-800 transition"
+                      >
+                        Track ride
+                      </button>
+                      <button
+                        onClick={() => handleCancel(ride.rideId)}
+                        disabled={cancellingId === ride.rideId}
+                        className="flex-1 border border-red-200 text-red-600 text-[10px] font-semibold py-1.5 rounded-xl hover:bg-red-50 transition disabled:opacity-50"
+                      >
+                        {cancellingId === ride.rideId ? "Cancelling..." : "Cancel"}
+                      </button>
                     </div>
                   )}
 

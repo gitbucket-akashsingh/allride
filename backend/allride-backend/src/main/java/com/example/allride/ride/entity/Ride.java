@@ -33,18 +33,9 @@ public class Ride {
     private RideStatus status;
 
     private LocalDateTime requestedAt;
-
     private LocalDateTime startedAt;
-
     private LocalDateTime completedAt;
 
-//    private Long riderId;
-    private Long passengerId;
-
+    private Long riderId;
     private Long driverId;
-
-    private boolean isOnline;
-
-    private Double latitude;
-    private Double longitude;
 }

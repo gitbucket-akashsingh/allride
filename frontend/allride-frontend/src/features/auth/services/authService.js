@@ -1,6 +1,10 @@
-import { login } from "../api/authApi";
-import { signup } from "../api/authApi";
-import { saveAuthData } from "@/features/auth/utils/authStorage";
+import { login, signup, logout } from "../api/authApi";
+import {
+  saveAuthData,
+  clearAuthData,
+  getRefreshToken,
+} from "@/features/auth/utils/authStorage";
+
 
 export const loginUser = async (credentials) => {
   const response = await login(credentials);
@@ -21,4 +25,17 @@ export const signupUser = async (data) => {
     role: data.role, // "RIDER" or "DRIVER"
   });
   return response.data;
+};
+
+
+export const logoutUser = async () => {
+  const refreshToken = getRefreshToken();
+  if (refreshToken) {
+    try {
+      await logout(refreshToken);
+    } catch {
+      // still clear local session even if server call fails
+    }
+  }
+  clearAuthData();
 };

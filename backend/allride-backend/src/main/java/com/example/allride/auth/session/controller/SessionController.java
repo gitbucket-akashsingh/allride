@@ -31,6 +31,8 @@ public class SessionController {
 
     private final SessionService sessionService;
 
+//    LOGOUT
+
     @Operation(
             summary = "Logout user",
             description = "Revokes refresh token and logs user out"
@@ -62,6 +64,8 @@ public class SessionController {
         return sessionService.getSessions(user, currentSessionId);
     }
 
+//    LOGOUT FROM SPECIFIC DEVICE
+
     @Operation(
             summary = "Logout specific device",
             description = "Revokes a specific active session/device"
@@ -77,6 +81,8 @@ public class SessionController {
         sessionService.logoutDevice(user, id);
         return ResponseEntity.ok("Session revoked");
     }
+
+//    LOGOUT FROM ALL DEVICE
 
     @Operation(
             summary = "Logout from all devices",
