@@ -8,6 +8,8 @@ on:
       - "frontend/allride-frontend/**"
       - ".github/workflows/**"
 
+  workflow_dispatch: # Allows you to manually see and run the workflow from the UI
+
 permissions:
   contents: read
 
@@ -50,8 +52,22 @@ jobs:
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
 
+      - name: Verify build env vars
+        run: |
+          echo "VITE_API_BASE_URL is set: $([ -n "$VITE_API_BASE_URL" ] && echo yes || echo NO)"
+          echo "VITE_SOCKET_URL is set: $([ -n "$VITE_SOCKET_URL" ] && echo yes || echo NO)"
+          echo "VITE_MAPBOX_TOKEN is set: $([ -n "$VITE_MAPBOX_TOKEN" ] && echo yes || echo NO)"
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_SOCKET_URL: ${{ vars.VITE_SOCKET_URL }}
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
+
       - name: Build
         run: vercel build --prod --token=$VERCEL_TOKEN
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_SOCKET_URL: ${{ vars.VITE_SOCKET_URL }}
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
 
       - name: Deploy Production
         run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
