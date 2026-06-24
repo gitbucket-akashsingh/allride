@@ -17,7 +17,10 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
 
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5174")
+                        .allowedOrigins("http://localhost:5174",
+                                "https://allride.live",
+                                "https://www.allride.live",
+                                "https://dev.allride.live")
                         .allowedMethods("*")
                         .allowedHeaders("*");
             }
