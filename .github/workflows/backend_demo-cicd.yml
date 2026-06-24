@@ -1,0 +1,81 @@
+name: Backend Demo CI/CD [Production Test]
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/allride-backend/**"
+      - ".github/workflows/backend_demo-cicd.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-demo-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "21"
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: Production
+
+    defaults:
+      run:
+        working-directory: backend/allride-backend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Make Maven Wrapper Executable
+        run: chmod +x mvnw
+
+      # Optional but recommended: fail fast before Docker build
+      - name: Build Application Package
+        run: ./mvnw clean package -DskipTests
+
+      - name: Login To Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/allride-backend:latest \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/allride-backend:${{ github.sha }} \
+            .
+
+      - name: Push Docker Images
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/allride-backend:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/allride-backend:${{ github.sha }}
+
+      - name: Deploy To Production EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/allride
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
+            docker compose ps
