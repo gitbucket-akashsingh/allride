@@ -118,3 +118,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+backend/allride-ai-service/.env
+backend/allride-ai-service/target/
