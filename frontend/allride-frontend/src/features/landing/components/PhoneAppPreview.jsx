@@ -238,7 +238,7 @@ function DemoRideNotification({ notification }) {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -120, opacity: 0 }}
           transition={{ type: "spring", stiffness: 380, damping: 32 }}
-          className="absolute top-11 left-3 right-3 z-50 pointer-events-none"
+          className="absolute top-11 left-3 right-3 z-5 pointer-events-none"
         >
           <div className="rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-700 shadow-[0_12px_40px_rgba(0,0,0,0.18)] px-3 py-2.5">
             <div className="flex items-start gap-2.5">
