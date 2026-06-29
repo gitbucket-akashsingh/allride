@@ -10,6 +10,7 @@ import com.example.allride.auth.authentication.dto.response.RefreshResponse;
 import com.example.allride.auth.authentication.dto.response.SignupResponse;
 import com.example.allride.auth.authentication.entity.User;
 import com.example.allride.auth.authentication.exception.EmailAlreadyExistsException;
+import com.example.allride.auth.authentication.exception.EmailNotVerifiedException;
 import com.example.allride.auth.authentication.exception.InvalidSignupRoleException;
 import com.example.allride.auth.common.enums.Role;
 import com.example.allride.auth.session.entity.UserSession;
@@ -18,6 +19,7 @@ import com.example.allride.auth.authentication.repository.UserRepository;
 import com.example.allride.auth.session.repository.UserSessionRepository;
 import com.example.allride.auth.authorization.jwt.JwtService;
 import com.example.allride.auth.session.entity.RefreshToken;
+import com.example.allride.auth.verification.service.EmailVerificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -38,6 +40,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserSessionRepository userSessionRepository;
+    private final EmailVerificationService emailVerificationService;
 
     //    SIGNUP Service
     public SignupResponse signup(SignupRequest request) {
@@ -60,14 +63,16 @@ public class AuthenticationService {
                 .fullName(request.getFullName())
                 .phone(request.getPhone())
                 .role(request.getRole())
+                .emailVerified(false)
                 .build();
 
         userRepository.save(user);
+        emailVerificationService.issueAndSendOtp(user);
 
         return SignupResponse.builder()
                 .email(user.getEmail())
                 .fullName(user.getFullName())
-                .message("User registered successfully")
+                .message("Account created. Please verify your email with the OTP sent to your inbox.")
                 .build();
     }
 
@@ -82,6 +87,10 @@ public class AuthenticationService {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
+
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException();
+        }
 
         UserSession session = UserSession.builder()
                 .user(user)
@@ -116,6 +125,7 @@ public class AuthenticationService {
                                 .fullName(user.getFullName())
                                 .email(user.getEmail())
                                 .role(user.getRole().name())
+                                .emailVerified(user.isEmailVerified())
                                 .build()
                 )
 
@@ -150,6 +160,7 @@ public class AuthenticationService {
                 .phone(user.getPhone())
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .emailVerified(user.isEmailVerified())
                 .build();
     }
 

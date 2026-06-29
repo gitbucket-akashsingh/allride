@@ -32,12 +32,9 @@ export const useSignup = () => {
 
     try {
       await signupUser(result.data);
-      toast.success("Account created successfully!");
-      navigate("/signup/success", {
-        state: {
-          role: roleFromUrl,
-          fullName: formData.fullName,
-        },
+      toast.success("Account created! Check your email for the verification code.");
+      navigate("/verify-otp", {
+        state: { email: result.data.email },
       });
     } catch (error) {
       const message =
