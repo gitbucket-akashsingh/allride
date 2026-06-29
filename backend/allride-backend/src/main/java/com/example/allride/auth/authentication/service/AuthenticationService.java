@@ -53,12 +53,14 @@ public class AuthenticationService {
             throw new InvalidSignupRoleException("Invalid role for signup");
         }
 
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        String normalizedEmail = EmailVerificationService.normalizeEmail(request.getEmail());
+
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
             throw new EmailAlreadyExistsException();
         }
 
         User user = User.builder()
-                .email(request.getEmail())
+                .email(normalizedEmail)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .phone(request.getPhone())
@@ -79,13 +81,15 @@ public class AuthenticationService {
     //    LOGIN Service
     public LoginResponse login(LoginRequest request, ClientInfo info) {
 
+        String normalizedEmail = EmailVerificationService.normalizeEmail(request.getEmail());
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        normalizedEmail,
                         request.getPassword())
         );
 
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
         if (!user.isEmailVerified()) {
