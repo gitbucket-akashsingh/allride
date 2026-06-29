@@ -83,6 +83,12 @@ jobs:
       #################################################
 
       - name: Run Unit Tests
+        env:
+          TEST_DB_URL: jdbc:postgresql://localhost:5432/allride_test
+          TEST_DB_USER: ${{ secrets.POSTGRES_USER }}
+          TEST_DB_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          TEST_DB_DRIVER: org.postgresql.Driver
+          TEST_JPA_DIALECT: org.hibernate.dialect.PostgreSQLDialect
         run: ./mvnw test
 
       #################################################
