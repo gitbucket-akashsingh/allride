@@ -53,10 +53,16 @@ export const useLogin = () => {
       navigate(redirectPath);
     } catch (error) {
       console.error("LOGIN ERROR:", error);
-
+      const code = error?.response?.data?.code;
       const message =
         error?.response?.data?.message || error.message || "Login failed";
-
+      if (code === "EMAIL_NOT_VERIFIED") {
+        toast.error("Please verify your email first.");
+        navigate("/verify-otp", {
+          state: { email: credentials.email },
+        });
+        return;
+      }
       toast.error(message);
     }
   };

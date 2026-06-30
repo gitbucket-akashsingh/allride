@@ -1,0 +1,20 @@
+services:
+  ai-postgres:
+    image: pgvector/pgvector:pg17
+    container_name: allride-ai-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: allride_ai
+      POSTGRES_USER: ai
+      POSTGRES_PASSWORD: ai_local_dev
+    volumes:
+      - allride_ai_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai -d allride_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  allride_ai_pgdata:
