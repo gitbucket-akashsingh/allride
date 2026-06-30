@@ -1,4 +1,6 @@
 import { login, signup, logout } from "../api/authApi";
+import { verifyEmail, resendOtp } from "../api/authApi";
+
 import {
   saveAuthData,
   clearAuthData,
@@ -24,6 +26,15 @@ export const signupUser = async (data) => {
     phone: data.phone,
     role: data.role, // "RIDER" or "DRIVER"
   });
+  return response.data;
+};
+
+export const verifyEmailOtp = async ({ email, otp }) => {
+  const response = await verifyEmail({ email, otp });
+  return response.data;
+};
+export const resendEmailOtp = async (email) => {
+  const response = await resendOtp({ email });
   return response.data;
 };
 

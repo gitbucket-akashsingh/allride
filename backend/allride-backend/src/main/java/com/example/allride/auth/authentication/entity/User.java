@@ -5,6 +5,8 @@ import com.example.allride.auth.common.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -32,4 +34,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean emailVerified = false;
+
+    private LocalDateTime emailVerifiedAt;
 }

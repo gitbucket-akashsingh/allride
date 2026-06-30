@@ -11,4 +11,5 @@ public class CurrentUserResponse {
     private String email;
     private String phone;
     private String role;
+    private boolean emailVerified;
 }

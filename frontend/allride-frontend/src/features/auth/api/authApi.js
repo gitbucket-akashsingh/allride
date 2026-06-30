@@ -19,3 +19,11 @@ export const refresh = async (refreshToken) => {
 export const logout = async (refreshToken) => {
   return api.post("/auth/logout", { refreshToken });
 };
+
+export const verifyEmail = async (data) => {
+  return api.post("/auth/verify-email", data);
+};
+
+export const resendOtp = async (data) => {
+  return api.post("/auth/resend-otp", data);
+};
